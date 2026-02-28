@@ -1,0 +1,78 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Grest Manager{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Add logo to navbar -->
+
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'grestmanager:index' %}">
+                <img src="{% static 'grestmanager/images/ups_bakhita_logo.png' %}" alt="Logo" width="30" height="30"
+                    class="d-inline-block align-text-top">
+                Grest App
+            </a>
+        </div>
+        <!-- Add actual user to navbar in the right corner -->
+        {% if user.is_authenticated %}
+        <div class="d-flex align-items-center">
+            <span class="navbar-text me-3">Benvenuto, {{ user.username }}!</span>
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-light btn-sm me-2">Esci</button>
+            </form>
+            <a href="{% url 'password_change' %}" class="btn btn-outline-light btn-sm">Cambia Password</a>
+        </div>
+        {% else %}
+        <div class="d-flex align-items-center">
+            <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Accedi</a>
+            <a href="{% url 'grestmanager:register' %}" class="btn btn-outline-light btn-sm">Registrati</a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <main class="container">
+        <div class="container mt-3">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="text-center mt-5">
+        <p>&copy; 2026 Grest Manager System</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Aspetta che il documento sia caricato
+        document.addEventListener("DOMContentLoaded", function () {
+            // Seleziona tutti gli alert di successo
+            const alerts = document.querySelectorAll('.alert-success');
+            alerts.forEach(function (alert) {
+                // Dopo 5000ms (5 secondi) avvia la chiusura
+                setTimeout(function () {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+
+</html>

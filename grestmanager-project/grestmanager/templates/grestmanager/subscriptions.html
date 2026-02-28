@@ -1,0 +1,14 @@
+<h1>Subscriptions</h1>
+<ul>
+{% if subscriptions_list %}
+    <ul>
+    {% for subscription in subscriptions_list %}
+        <!-- <li><a href="/grestmanager/{{ person.id }}/">{{ person.name }}</a></li> -->
+        <li>{{ subscription.related_to.name }} - {{ subscription.date }} </li> <!-- Uso % url per puntare alla view senza l'url hardcoded -->
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No subscriptions are available.</p>
+{% endif %}
+</ul>
+

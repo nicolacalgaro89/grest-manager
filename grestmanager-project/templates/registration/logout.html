@@ -1,0 +1,21 @@
+<!-- The logout default view of Django does not render a template, but simply logs the user out and redirects to a specified URL. 
+If you want to render a template after logout, you can create a custom logout view. Here's how you can do it:
+1. Create a custom logout view in your `views.py`:
+```pythonfrom django.contrib.auth import logout
+from django.shortcuts import redirect, render
+def custom_logout(request):
+    logout(request)
+    return render(request, 'grestmanager/registration/logout.html')
+```
+2. Update your `urls.py` to use the custom logout view:
+```pythonfrom . import views
+urlpatterns = [
+    # ... other url patterns ...
+    path("logout/", views.custom_logout, name="logout"),
+]
+```
+3. Create a `logout.html` template in the `grestmanager/registration/` directory. This template can contain a message confirming that the user has been logged out,
+ and perhaps a link to log back in or return to the homepage. For example:
+```html{% load static %}        
+<h1>You have been logged out.</h1>
+<a href="{% url 'grestmanager:login' %}">Log back in</a>     -->

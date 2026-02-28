@@ -1,0 +1,46 @@
+{% load static %}
+
+<!-- <link rel="stylesheet" href="{% static 'grestmanager/style.css' %}"> -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.min.css" rel="stylesheet">
+
+<img src="{% static 'grestmanager/images/ups_bakhita_logo.png' %}" alt="Logo">
+
+<h1>Benvenuto {{ user.username }}</h1>
+
+<!-- Crea sottoscrizione link as button -->
+<a href="{% url 'grestmanager:create_subscription' %}" class="btn btn-primary">Crea Sottoscrizione</a>
+
+{% if person_list %}
+    <ul>
+    {% for person in person_list %}
+        <!-- <li><a href="/grestmanager/{{ person.id }}/">{{ person.name }}</a></li> -->
+        <li><a href="{% url 'grestmanager:detail' person.id %}">{{ person.name }}</a></li> <!-- Uso % url per puntare alla view senza l'url hardcoded -->
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No persons are available.</p>
+{% endif %}
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<!-- POST subscribe -->
+<form action="{% url 'grestmanager:subscribe' %}" method="post">
+{% csrf_token %}
+
+<fieldset>
+    <legend><h1>Subscribe</h1></legend>
+    {% for person in person_list %}
+        <input type="radio" name="subscribe" id="person{{ forloop.counter }}" value="{{ person.id }}">
+        <label for="person{{ forloop.counter }}">{{ person.name }}</label><br>
+    {% endfor %}
+</fieldset>
+<input type="submit" value="Subscribe">
+</form>
+
+<form action="{% url 'grestmanager:logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
+
+<!-- Register link as button -->
+<a href="{% url 'grestmanager:register' %}" class="btn btn-primary">Register</a>

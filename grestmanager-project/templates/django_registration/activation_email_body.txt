@@ -1,0 +1,4 @@
+Gentile {{user}}
+la tua chiave di attivazione è: {{activation_key}}
+
+Clicca qui per attivare: 192.168.1.102:8000/accounts/activate

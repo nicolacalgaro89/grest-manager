@@ -1,0 +1,1 @@
+Grest Manager: Richiesta attivazione {{user}}
