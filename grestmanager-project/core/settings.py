@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv # Opzionale, vedi sotto
 
@@ -40,7 +41,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,*').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
+
+CSFR_TRUSTED_ORIGINS = [os.environ.get('CSFR_TRUSTED_ORIGINS')]
 
 # Application definition
 
@@ -112,15 +115,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Oppure, senza django-environ, puoi leggere direttamente le variabili d'ambiente
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ["PGDATABASE"],
-        'USER': os.environ["PGUSER"],
-        'PASSWORD': os.environ["PGPASSWORD"],
-        'HOST': os.environ["PGHOST"],
-        'PORT': os.environ["PGPORT"],
-    }
-}
+'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.environ["PGDATABASE"],
+    'USER': os.environ["PGUSER"],
+    'PASSWORD': os.environ["PGPASSWORD"],
+    'HOST': os.environ["PGHOST"],
+    'PORT': os.environ["PGPORT"],
+}}
+
+REMOTE_POSTGRES = False
+if REMOTE_POSTGRES:
+    DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

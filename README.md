@@ -138,3 +138,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ```
+
+# Gestione file statici
+In settings.py settare la variabile:
+```
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+```
+e lanciare
+```
+python manage.py collectstatic
+```
+Questo raccoglie tutti i file statici di tutte le cartelle e le mette nella cartella definita. Whitenoise servirà i file statici da quella cartella.
