@@ -170,7 +170,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 LOGIN_URL = "grestmanager:login"           # dove mandare chi non è loggato
 LOGIN_REDIRECT_URL = "grestmanager:index"  # dove andare dopo login
