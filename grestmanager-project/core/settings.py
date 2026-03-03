@@ -39,11 +39,16 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # ALLOWED_HOSTS = ['*']
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
 
-CSFR_TRUSTED_ORIGINS = [os.environ.get('CSFR_TRUSTED_ORIGINS')]
+CSFR_TRUSTED_ORIGINS = os.environ.get('CSFR_TRUSTED_ORIGINS').split(',')
 
 # Application definition
 
