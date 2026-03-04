@@ -46,9 +46,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
 
 # ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
-CSFR_TRUSTED_ORIGINS = os.environ.get('CSFR_TRUSTED_ORIGINS').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 
 # Application definition
 
@@ -172,7 +172,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-LOGIN_URL = "grestmanager:login"           # dove mandare chi non è loggato
+LOGIN_URL = "login"           # dove mandare chi non è loggato
 LOGIN_REDIRECT_URL = "grestmanager:index"  # dove andare dopo login
 LOGOUT_REDIRECT_URL = "grestmanager:index" # dove andare dopo logout
 
