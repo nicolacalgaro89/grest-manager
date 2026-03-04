@@ -14,6 +14,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from .models import Person, Subscription
 from .forms import PersonForm
+from django.contrib.auth.models import Group          
 
 
 # def index(request):
@@ -201,6 +202,13 @@ class RegisterView(SuccessMessageMixin, generic.CreateView):
     
     def form_valid(self, form):
         print("DEBUG: Form valida! Sto per creare il messaggio.")
+        form.instance.username = form.cleaned_data.get("username")  # Imposta il nome utente prima di salvare
         response = super().form_valid(form)
+        try:
+            base_group = Group.objects.get(name='BaseUsers')
+            self.object.groups.add(base_group)
+        except Group.DoesNotExist:
+            # Gestisci il caso in cui il gruppo non esista ancora nel DB
+            print("ERRORE: Il gruppo 'BaseUsers' non esiste!")
         print(f"DEBUG: Success URL è: {self.get_success_url()}")
         return response
