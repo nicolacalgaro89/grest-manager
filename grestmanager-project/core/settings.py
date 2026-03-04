@@ -176,7 +176,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 LOGIN_URL = "login"           # dove mandare chi non è loggato
-LOGIN_REDIRECT_URL = "grestmanager:index"  # dove andare dopo login
+LOGIN_REDIRECT_URL = "grestmanager:persons"  # dove andare dopo login
 LOGOUT_REDIRECT_URL = "grestmanager:index" # dove andare dopo logout
 
 #ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window

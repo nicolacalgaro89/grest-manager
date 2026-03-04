@@ -1,0 +1,15 @@
+<h1>Persons</h1>
+<h2>Benvenuto {{ user.username }}</h2>
+<ul>
+{% if persons_list %}
+    <ul>
+    {% for person in persons_list %}
+        <!-- <li><a href="/grestmanager/{{ person.id }}/">{{ person.name }}</a></li> -->
+        <li>{{ person.name }} - {{ person.birth_date }} </li> <!-- Uso % url per puntare alla view senza l'url hardcoded -->
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No persons are available.</p>
+{% endif %}
+</ul>
+

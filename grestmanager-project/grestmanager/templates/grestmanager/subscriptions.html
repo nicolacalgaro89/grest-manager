@@ -1,14 +1,47 @@
-<h1>Subscriptions</h1>
-<ul>
-{% if subscriptions_list %}
-    <ul>
-    {% for subscription in subscriptions_list %}
-        <!-- <li><a href="/grestmanager/{{ person.id }}/">{{ person.name }}</a></li> -->
-        <li>{{ subscription.related_to.name }} - {{ subscription.date }} </li> <!-- Uso % url per puntare alla view senza l'url hardcoded -->
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No subscriptions are available.</p>
-{% endif %}
-</ul>
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Iscrizioni{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <!-- tabella persone gestite dall'utente loggato -->
+    <h1 class="mb-4">Iscrizioni</h1>
+    {% if subscription_list %}
+    <p class="lead">Ecco le iscrizioni per questa anagrafica.</p>
+    {% else %}
+    <p class="text-muted">Non hai ancora aggiunto nessuna iscrizione per questa anagrafica.</p>
+    {% endif %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Evento</th>
+                <th>Attiva</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subscription in subscription_list %}
+            <tr>
+                <td>{{ subscription.date }}</td>
+                <td>{{ subscription.to_event.name }}</td>
+                <td>{{ subscription.is_active|yesno:"Sì,No" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <!--Create button to add a new subscription -->
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-center">
+                    <!-- link to create a new subscription for the related person -->
+                    <a href="{% url 'grestmanager:subscription_create' person_id=person.id %}" class="btn btn-primary">Aggiungi Iscrizione</a>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    <div class="text-center mt-3">
+        <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Torna alle anagrafiche</a>
+    </div>
+</div>
+{% endblock %}
+
 

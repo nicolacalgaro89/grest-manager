@@ -1,0 +1,25 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Elimina anagrafica{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Elimina anagrafica</h2>
+                    <p class="text-center">Sei sicuro di voler eliminare questa anagrafica?</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">Elimina</button>
+                            <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Annulla</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

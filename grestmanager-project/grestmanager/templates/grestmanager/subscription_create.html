@@ -1,0 +1,30 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Crea Iscrizione{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Crea Iscrizione</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form.as_p }}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Invia</button>
+                        </div>
+                    </form>
+                    <!-- bottone per tornare indietro -->
+                    <div class="text-center mt-3">
+                        <a href="{% url 'grestmanager:subscriptions' person_id=person.id %}" class="btn btn-secondary">Torna alle iscrizioni</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

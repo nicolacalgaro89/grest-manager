@@ -1,15 +1,53 @@
-<h1>Persons</h1>
-<h2>Benvenuto {{ user.username }}</h2>
-<ul>
-{% if persons_list %}
-    <ul>
-    {% for person in persons_list %}
-        <!-- <li><a href="/grestmanager/{{ person.id }}/">{{ person.name }}</a></li> -->
-        <li>{{ person.name }} - {{ person.birth_date }} </li> <!-- Uso % url per puntare alla view senza l'url hardcoded -->
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No persons are available.</p>
-{% endif %}
-</ul>
+{% extends 'grestmanager/base.html' %}
 
+{% block title %}Anagrafiche{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <!-- tabella persone gestite dall'utente loggato -->
+    <h1 class="mb-4">Anagrafiche in gestione</h1>
+    {% if persons_list %}
+    <p class="lead">Ecco le anagrafiche che stai gestendo. Puoi aggiungerne di nuove o modificare quelle esistenti.</p>
+    {% else %}
+    <p class="text-muted">Non hai ancora aggiunto nessuna anagrafica. Clicca sul pulsante qui sotto per iniziare.</p>
+    {% endif %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Data di Nascita</th>
+                <th>Codice Fiscale</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for person in persons_list %}
+            <tr>
+                <td>{{ person.name }}</td>
+                <td>{{ person.surname }}</td>
+                <!--birth date in format dd/mm/yyyy-->
+                <td>{{ person.birth_date|date:"d/m/Y" }}</td>
+                <td>{{ person.tax_code }}</td>
+                <!-- button iscrizioni-->
+                <td>
+                    <a href="{% url 'grestmanager:subscriptions' person.pk %}"
+                        class="btn btn-sm btn-info">Iscrizioni</a>
+                    <a href="{% url 'grestmanager:person_update' person.pk %}"
+                        class="btn btn-sm btn-warning">Modifica</a>
+                    <a href="{% url 'grestmanager:person_delete' person.pk %}" class="btn btn-sm btn-danger">Rimuovi</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <!--Create button to add a new person -->
+        <tfoot>
+            <tr>
+                <td colspan="5" class="text-center">
+                    <a href="{% url 'grestmanager:person_create' %}" class="btn btn-primary">Aggiungi anagrafica</a>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{% endblock %}
