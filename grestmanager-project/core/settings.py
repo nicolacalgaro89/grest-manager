@@ -119,19 +119,22 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # }
 
 # Oppure, senza django-environ, puoi leggere direttamente le variabili d'ambiente
+# DATABASES = {
+# 'default': {
+#     'ENGINE': 'django.db.backends.postgresql',
+#     'NAME': os.environ["PGDATABASE"],
+#     'USER': os.environ["PGUSER"],
+#     'PASSWORD': os.environ["PGPASSWORD"],
+#     'HOST': os.environ["PGHOST"],
+#     'PORT': os.environ["PGPORT"],
+# }}
 DATABASES = {
-'default': {
-    'ENGINE': 'django.db.backends.postgresql',
-    'NAME': os.environ["PGDATABASE"],
-    'USER': os.environ["PGUSER"],
-    'PASSWORD': os.environ["PGPASSWORD"],
-    'HOST': os.environ["PGHOST"],
-    'PORT': os.environ["PGPORT"],
-}}
+    'default': dj_database_url.parse(os.environ.get('DATABASE_URL',''))
+}
 
 REMOTE_POSTGRES = False
 if REMOTE_POSTGRES:
-    DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    DATABASES['default'] = dj_database_url.parse(os.environ.get('REMOTE_DATABASE_URL',''))
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
