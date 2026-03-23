@@ -1,0 +1,34 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Dettagli Persona{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Dettagli {{ person.name }} {{ person.surname }}</h2>
+                    <!--Mostra i dettagli della persona-->
+                    <p><strong>Nome:</strong> {{ person.name }}</p>
+                    <p><strong>Cognome:</strong> {{ person.surname }}</p>
+                    <p><strong>Data di Nascita:</strong> {{ person.birth_date|date:"d/m/Y" }}</p>
+                    <p><strong>Codice Fiscale:</strong> {{ person.tax_code }}</p>
+                    <h3 class="mt-4">Iscrizioni</h3>
+                    <ul class="list-group">
+                    {% for subscription in person.subscription_set.all %}
+                        <li class="list-group-item">{{ subscription.date|date:"d/m/Y" }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">Nessuna iscrizione trovata.</li>
+                    {% endfor %}
+                    </ul>
+                    <div class="d-grid mt-4">
+                        <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Torna alle anagrafiche</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

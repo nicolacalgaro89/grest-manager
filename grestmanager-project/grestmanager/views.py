@@ -16,55 +16,13 @@ from .models import Person, Subscription
 from .forms import PersonForm
 from django.contrib.auth.models import Group          
 
-
-# def index(request):
-#     return HttpResponse("Hello, world. You're at the grest manager index.")
-
-# def index(request):
-#     person_list = Person.objects.order_by("-birth_date")[:5]
-#     output = ", ".join([q.name for q in person_list])
-#     return HttpResponse(output)
-
-# def index(request):
-#     person_list = Person.objects.order_by("-birth_date")[:5]
-#     template = loader.get_template("grestmanager/index.html")
-#     context = {"person_list": person_list}
-#     return HttpResponse(template.render(context, request))
-
-# def index(request):
-#     person_list = Person.objects.order_by("-birth_date")[:5]
-#     context = {"person_list": person_list}
-#     return render(request, "grestmanager/index.html", context)
-
 # E' solo una landing page, non ha bisogno di dati dinamici, quindi non passo nessun contesto
 def index(request):
      return render(request, "grestmanager/index.html")
- 
-# def detail(request, person_id):
-#     return HttpResponse("You're looking at person %s." % person_id)
 
-# def detail(request, person_id):
-#     try:
-#         person = Person.objects.get(pk=person_id)
-#     except Person.DoesNotExist:
-#         raise Http404("Person does not exist")
-#     return render(request, "grestmanager/detail.html", {"person": person})
-
-@login_required
-def detail(request, person_id):
-    person = get_object_or_404(Person, pk=person_id)
-    return render(request, "grestmanager/detail.html", {"person": person})
-
-  
-# @login_required
-# @permission_required("grestmanager.add_person", raise_exception=True) Non funziona con le class based view, per questo uso i mixin
-# class PersonsView(generic.ListView):
-#     template_name = "grestmanager/persons.html"
-#     context_object_name = "persons_list"
-
-#     def get_queryset(self):
-#         """Return the list of persons ordered by birth date."""
-#         return Person.objects.order_by("-birth_date")
+class PersonDetailView(generic.DetailView):
+    model = Person
+    template_name = "grestmanager/person_detail.html"
     
 # Mixins MUST come before the generic view in the inheritance list
 class PersonsListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
@@ -117,16 +75,6 @@ class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
         return super().dispatch(request, *args, **kwargs)
     # Questo dice a Django dove andare dopo il salvataggio
     success_url = reverse_lazy('grestmanager:persons')    
-
-
-# class SubscriptionsListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
-#     template_name = "grestmanager/subscriptions.html"
-#     context_object_name = "subscriptions_list"
-#     permission_required = "grestmanager.add_subscription"
-
-#     def get_queryset(self):
-#         """Return the last five issued subscriptions."""
-#         return Subscription.objects.order_by("-date").filter(related_to__managed_by=self.request.user, related_to__pk=self.kwargs["person_id"]) # Filtro le sottoscrizioni per mostrare solo quelle relative alla persona specificata nell'url e gestite dall'utente loggato
 
 # Sono costretto a usare una function based view per poter usare i decoratori di login e permission, altrimenti con le class based view dovrei usare i mixin, ma non riesco a farli funzionare insieme alla logica di filtraggio delle sottoscrizioni per persona e utente loggato, quindi preferisco questa soluzione più semplice
 @login_required
