@@ -2,6 +2,7 @@ import datetime
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 class Person(models.Model):
     name = models.CharField(max_length=200)
@@ -28,7 +29,7 @@ class Subscription(models.Model):
     price = models.CharField(max_length=200)
     related_to = models.ForeignKey(
         "Person", 
-        on_delete=models.DO_NOTHING, 
+        on_delete=models.CASCADE, 
         related_name="subscriptions")
     to_event = models.ForeignKey(
         "Event", 
@@ -42,3 +43,25 @@ class Subscription(models.Model):
         now = timezone.now()
         return self.to_event.active and self.to_event.subscription_opening_date <= now <= self.to_event.subscription_closing_date
     
+class TimeEntry(models.Model):
+    class EntryType(models.TextChoices):
+        IN = 'IN', _('Inbound')
+        OUT = 'OUT', _('Outbound')
+
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    # L'attributo che salva il tipo di timbratura
+    entry_type = models.CharField(
+        max_length=3,
+        choices=EntryType.choices,
+        default=EntryType.IN,
+    )
+    
+    remarks = models.CharField(max_length=200, blank=True)
+    
+    related_to = models.ForeignKey(
+        "Person", 
+        on_delete=models.CASCADE, 
+        related_name="time_entries")
+    def __str__(self):
+        return self.date.strftime("%Y-%m-%d %H:%M:%S") + " - " + self.description

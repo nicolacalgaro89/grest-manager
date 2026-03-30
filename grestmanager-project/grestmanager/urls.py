@@ -6,7 +6,7 @@ from django.contrib.auth import views as auth_views
 app_name = "grestmanager"
 urlpatterns = [
     path("", views.index, name="index"),
-    path("person/<int:pk>/", views.PersonDetailView.as_view(), name="detail"),
+    path("persons/<int:person_id>/", views.PersonDetailView.as_view(), name="person_detail"),
     path("persons/", views.PersonsListView.as_view(), name="persons"),
     path("persons/create/", views.PersonCreateView.as_view(), name="person_create"),
     path("persons/<int:person_id>/update/", views.PersonUpdateView.as_view(), name="person_update"),

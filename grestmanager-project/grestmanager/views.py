@@ -55,6 +55,7 @@ class PersonUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Person
     template_name = "grestmanager/person_update.html"
     form_class = PersonForm
+    pk_url_kwarg = "person_id"
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
         person = self.get_object()
@@ -67,6 +68,7 @@ class PersonUpdateView(LoginRequiredMixin, generic.UpdateView):
 class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Person
     template_name = "grestmanager/person_delete.html"
+    pk_url_kwarg = "person_id"
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
         person = self.get_object()
