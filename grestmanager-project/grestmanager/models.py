@@ -23,6 +23,9 @@ class Event(models.Model):
     subscription_closing_date = models.DateTimeField("subscription closing date")
     def __str__(self):
         return self.name
+    def is_subscription_open(self):
+        now = timezone.now()
+        return self.subscription_opening_date <= now <= self.subscription_closing_date
     
 class Subscription(models.Model):
     date = models.DateTimeField("issuance date")

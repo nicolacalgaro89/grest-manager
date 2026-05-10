@@ -13,6 +13,27 @@
         <a href="{% url 'login' %}" class="btn btn-primary mt-3">Accedi</a>
         <a href="{% url 'grestmanager:register' %}" class="btn btn-secondary mt-3">Registrati</a>
     {% endif %}
+    <!-- Lista degli eventi attivi -->
+    <h2 class="mt-5">Eventi attivi</h2>
+    {% if active_events %}
+        <ul class="list-group mt-3">
+            {% for event in active_events %}
+                <!-- show elements like squares from left to right -->
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ event.name }}
+                    <span class="badge bg-primary rounded-pill">{{ event.date }}</span>
+                    <!-- Iscrizioni aperte se la data attuale è compresa tra la data di inizio e la data di fine iscrizioni -->
+                    {% if event.is_subscription_open %}
+                        <span class="badge bg-success">Iscrizioni aperte!!!</span>
+                    {% endif %}
+                    <!-- Aggiungi un link per visualizzare i dettagli dell'evento in futuro -->
+                    <a href="{% url 'grestmanager:event_detail' event.pk %}" class="btn btn-sm btn-outline-primary">Dettagli</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted mt-3">Non ci sono eventi attivi al momento.</p>
+    {% endif %}
 </div>
 
 {% endblock %}

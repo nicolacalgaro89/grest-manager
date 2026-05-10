@@ -25,6 +25,9 @@
                 <td>{{ subscription.date }}</td>
                 <td>{{ subscription.to_event.name }}</td>
                 <td>{{ subscription.is_active|yesno:"Sì,No" }}</td>
+                <td>
+                    <a href="{% url 'grestmanager:subscription_delete' person_id=subscription.related_to.id subscription_id=subscription.id %}" class="btn btn-danger btn-sm">Elimina</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

@@ -12,17 +12,35 @@ from django.core.exceptions import PermissionDenied
 
 from django.urls import reverse, reverse_lazy   
 from django.utils import timezone
-from .models import Person, Subscription
+from .models import Person, Subscription, Event
 from .forms import PersonForm
 from django.contrib.auth.models import Group          
 
 # E' solo una landing page, non ha bisogno di dati dinamici, quindi non passo nessun contesto
-def index(request):
-     return render(request, "grestmanager/index.html")
+# add events list to the context in the future, so I can show them in the index page
+class IndexView(generic.ListView):
+    template_name = "grestmanager/index.html"
+    context_object_name = "active_events"
 
-class PersonDetailView(generic.DetailView):
+    def get_queryset(self):
+        return Event.objects.filter(active=True)
+
+class EventDetailView(generic.DetailView):
+    model = Event
+    template_name = "grestmanager/event_detail.html"
+    pk_url_kwarg = "event_id"
+
+class PersonDetailView(LoginRequiredMixin, generic.DetailView):
     model = Person
     template_name = "grestmanager/person_detail.html"
+    pk_url_kwarg = "person_id"
+    
+    # Verify that the logged-in user is the manager of the person being viewed
+    def dispatch(self, request, *args, **kwargs):
+        person = self.get_object()
+        if person.managed_by != request.user:
+            raise PermissionDenied("You do not have permission to view this person.")
+        return super().dispatch(request, *args, **kwargs)
     
 # Mixins MUST come before the generic view in the inheritance list
 class PersonsListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
@@ -122,26 +140,31 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
     def get_success_url(self):
         # Dopo il salvataggio, torna alla lista delle iscrizioni di quella persona
         return reverse_lazy('grestmanager:subscriptions', kwargs={'person_id': self.kwargs['person_id']})
-
-def subscribe(request):
-    try:
-        selected_person = Person.objects.get(pk=request.POST["subscribe"])
-    except (KeyError, Person.DoesNotExist):
-        # Redisplay the question voting form.
-        return render(
-            request,
-            "grestmanager/index.html",
-            {
-                "person_list": Person.objects.all(),
-                "error_message": "You didn't select a person.",
-            },
-        )
-    else:
-        # create a new subscription
-        subscription = Subscription(date=timezone.now(), related_to=selected_person, price="0")
-        subscription.save()
-        return HttpResponseRedirect(reverse("grestmanager:detail", args=(selected_person.id,)))  #Uso reverse per non avere l'url hardcoded
     
+class SubscriptionDeleteView(LoginRequiredMixin, generic.DeleteView):
+    model = Subscription
+    template_name = "grestmanager/subscription_delete.html"
+    pk_url_kwarg = "subscription_id"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        subscription = self.get_object()
+        context['person'] = subscription.related_to
+        return context
+
+    # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
+    def dispatch(self, request, *args, **kwargs):
+        subscription = self.get_object()
+        if subscription.related_to.managed_by != request.user:
+            raise PermissionDenied("You do not have permission to delete this subscription.")
+        return super().dispatch(request, *args, **kwargs)
+
+    # Questo dice a Django dove andare dopo il salvataggio
+    def get_success_url(self):
+        # Dopo il salvataggio, torna alla lista delle iscrizioni di quella persona
+        person_id = self.get_object().related_to.id
+        return reverse_lazy('grestmanager:subscriptions', kwargs={'person_id': person_id})
+
 #------Gestione account------
     
 class RegisterView(SuccessMessageMixin, generic.CreateView):
