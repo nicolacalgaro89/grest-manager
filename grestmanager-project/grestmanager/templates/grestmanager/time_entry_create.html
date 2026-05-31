@@ -1,6 +1,6 @@
 {% extends 'grestmanager/base.html' %}
 
-{% block title %}Crea Persona{% endblock %}
+{% block title %}Aggiungi presenza{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -8,7 +8,7 @@
         <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title text-center mb-4">Crea Persona</h2>
+                    <h2 class="card-title text-center mb-4">Aggiungi presenza</h2>
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
@@ -16,9 +16,12 @@
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Invia</button>
-                            <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary mt-2">Annulla</a>
                         </div>
                     </form>
+                    <!-- bottone per tornare indietro -->
+                    <div class="text-center mt-3">
+                        <a href="{% url 'grestmanager:time_entries' person_id=person.id %}" class="btn btn-secondary">Torna alle voci di tempo</a>
+                    </div>
                 </div>
             </div>
         </div>

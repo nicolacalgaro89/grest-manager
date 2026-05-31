@@ -32,6 +32,8 @@
                 <td>
                     <a href="{% url 'grestmanager:subscriptions' person.pk %}"
                         class="btn btn-sm btn-info">Iscrizioni</a>
+                    <a href="{% url 'grestmanager:time_entries' person.pk %}"
+                        class="btn btn-sm btn-success">Presenze</a>
                     <a href="{% url 'grestmanager:person_update' person.pk %}"
                         class="btn btn-sm btn-warning">Modifica</a>
                     <a href="{% url 'grestmanager:person_delete' person.pk %}" class="btn btn-sm btn-danger">Rimuovi</a>

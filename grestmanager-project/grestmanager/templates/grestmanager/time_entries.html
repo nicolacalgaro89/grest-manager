@@ -1,0 +1,45 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Presenze{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <!-- tabella persone gestite dall'utente loggato -->
+    <h1 class="mb-4">Presenze</h1>
+    {% if time_entry_list %}
+    <p class="lead">Ecco le presenze per questa anagrafica.</p>
+    {% else %}
+    <p class="text-muted">Non è stata registrata nessuna presenza per questa anagrafica.</p>
+    {% endif %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Entrata/Uscita</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for time_entry in time_entry_list %}
+            <tr>
+                <td>{{ time_entry.timestamp }}</td>
+                <td>{{ time_entry.entry_type }}</td>
+                <td>{{ time_entry.remarks }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <!--Create button to add a new time entry-->
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-center">
+                    <a href="{% url 'grestmanager:time_entry_create' person_id=person.id %}?entry_type=IN" class="btn btn-primary me-2">Aggiungi Ingresso</a>
+                    <a href="{% url 'grestmanager:time_entry_create' person_id=person.id %}?entry_type=OUT" class="btn btn-primary">Aggiungi Uscita</a>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    <div class="text-center mt-3">
+        <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Torna alle anagrafiche</a>
+    </div>
+</div>
+{% endblock %}

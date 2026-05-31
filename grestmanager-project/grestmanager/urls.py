@@ -15,6 +15,8 @@ urlpatterns = [
     path("persons/<int:person_id>/subscriptions/", views.subscriptions, name="subscriptions"),
     path("persons/<int:person_id>/subscriptions/create/", views.SubscriptionCreateView.as_view(), name="subscription_create"),
     path("persons/<int:person_id>/subscriptions/<int:subscription_id>/delete/", views.SubscriptionDeleteView.as_view(), name="subscription_delete"),
+    path("persons/<int:person_id>/time-entries/", views.time_entries, name="time_entries"),
+    path("persons/<int:person_id>/time-entries/create/", views.TimeEntryCreateView.as_view(), name="time_entry_create"),
 
     path("accounts/register/", views.RegisterView.as_view(), name="register"),
 

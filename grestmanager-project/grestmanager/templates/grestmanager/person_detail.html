@@ -16,7 +16,7 @@
                     <p><strong>Codice Fiscale:</strong> {{ person.tax_code }}</p>
                     <h3 class="mt-4">Iscrizioni</h3>
                     <ul class="list-group">
-                    {% for subscription in person.subscription_set.all %}
+                    {% for subscription in person.subscriptions.all %}
                         <li class="list-group-item">{{ subscription.date|date:"d/m/Y" }}</li>
                     {% empty %}
                         <li class="list-group-item text-muted">Nessuna iscrizione trovata.</li>

@@ -12,7 +12,7 @@ from django.core.exceptions import PermissionDenied
 
 from django.urls import reverse, reverse_lazy   
 from django.utils import timezone
-from .models import Person, Subscription, Event
+from .models import Person, Subscription, Event, TimeEntry, EntryType
 from .forms import PersonForm
 from django.contrib.auth.models import Group          
 
@@ -96,7 +96,8 @@ class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
     # Questo dice a Django dove andare dopo il salvataggio
     success_url = reverse_lazy('grestmanager:persons')    
 
-# Sono costretto a usare una function based view per poter usare i decoratori di login e permission, altrimenti con le class based view dovrei usare i mixin, ma non riesco a farli funzionare insieme alla logica di filtraggio delle sottoscrizioni per persona e utente loggato, quindi preferisco questa soluzione più semplice
+# Sono costretto a usare una function based view per poter usare i decoratori di login e permission, altrimenti con le class based view dovrei usare i mixin, 
+# ma non riesco a farli funzionare insieme alla logica di filtraggio delle sottoscrizioni per persona e utente loggato, quindi preferisco questa soluzione più semplice
 @login_required
 @permission_required("grestmanager.add_subscription", raise_exception=True) #Non funziona con le class based view, per questo uso i mixin
 def subscriptions(request, person_id):
@@ -164,6 +165,57 @@ class SubscriptionDeleteView(LoginRequiredMixin, generic.DeleteView):
         # Dopo il salvataggio, torna alla lista delle iscrizioni di quella persona
         person_id = self.get_object().related_to.id
         return reverse_lazy('grestmanager:subscriptions', kwargs={'person_id': person_id})
+    
+@login_required
+def time_entries(request, person_id):
+    person = get_object_or_404(Person, id=person_id) # Recuperi la persona dall'URL
+    time_entry_list = TimeEntry.objects.order_by("-timestamp").filter(related_to__managed_by=request.user, related_to=person) # Filtro le voci di tempo per mostrare solo quelle relative alla persona specificata nell'url e gestite dall'utente loggato
+    context = {"time_entry_list": time_entry_list, "person": person} # Passo anche la persona al contesto per poterla mostrare nella pagina
+    return render(request, "grestmanager/time_entries.html", context)
+
+
+class TimeEntryCreateView(LoginRequiredMixin, generic.CreateView):
+    model = TimeEntry
+    template_name = "grestmanager/time_entry_create.html"
+    fields = ['entry_type', 'remarks'] # Campi per la creazione di una nuova voce di tempo
+
+    # passo person_id al contesto per poterlo usare nel template
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        person_id = self.kwargs.get('person_id')
+        person = get_object_or_404(Person, id=person_id)
+        context['person'] = person
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        entry_type = self.request.GET.get('entry_type')
+        if entry_type in [choice[0] for choice in EntryType.choices]:
+            initial['entry_type'] = entry_type
+        return initial
+
+    def dispatch(self, request, *args, **kwargs):
+        person = get_object_or_404(Person, id=self.kwargs.get('person_id'))
+        if person.managed_by != request.user:
+            raise PermissionDenied("You do not have permission to add a time entry for this person.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        # 1. Recupera l'ID della persona dall'URL (URLconf)
+        person_id = self.kwargs.get('person_id')
+        
+        # 2. Recupera l'oggetto Person o restituisce 404
+        person = get_object_or_404(Person, id=person_id)
+        
+        # 3. Collega la persona all'istanza della presenza che sta per essere creata
+        form.instance.related_to = person
+        
+        # 4. Chiama il metodo originale per salvare i dati
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        # Dopo il salvataggio, torna alla lista delle iscrizioni di quella persona
+        return reverse_lazy('grestmanager:time_entries', kwargs={'person_id': self.kwargs['person_id']})
 
 #------Gestione account------
     
