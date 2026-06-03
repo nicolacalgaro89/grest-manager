@@ -1,7 +1,8 @@
 # Grest Manager
-Gestionale GREST
+Gestionale per centri estivi ragazzi (GREST). L'applicazione è sviluppata in Django e il depoly è previsto su piattaforma Railway (in settings.py sono stati inseriti gli accorgimenti del caso). L'idea è di tenere un'applicazione semplice e manutenibile anche con poca esperienza in ambito di sviluppo software.  
 
-# Concetti base
+# Linee guida sviluppo Django
+## Concetti base
 La view è l'oggetto che gestisce le informazioni da e per il client. Alcune view rispondono a chiamate GET e restituiscono un template popolato con i valori delle variabili in esso contenuti esplicitate. Altre view sono progettate per rispondere a richieste POST che vanno ad agire sul sistema (database, ...) e non renderizzano alcun template ma eventualmente ridirezionano il client verso un'altra pagina.
 Le view si possono definire da zero gestendo la reazione alla richiesta in maniera specifica e customizzata per la particolare situazione oppure si può basare su view standar (sono classi in questo caso) che possono essere estese o per le quali si fa l'override di qualche parametro per customizzarne alcuni aspetti.
 
@@ -9,14 +10,14 @@ Gli url definiti in grestmanager-project/grestmanager/urls.py fanno il mapping t
 
 Esitono pacchetti di url come quando si aggiunge `path("accounts/", include("django.contrib.auth.urls"))` che hanno delle view preconfigurate, le quali a loro volta cercano i template da restituire in determinate posizioni. Se non li trovano in quelle posizioni fanno il fallback su altre cartelle specifiche. Per far funzionare questi url è necessario che siano aggiunti a livello core e non nell'applicazione. Anche i template vanno messi nel percorso definito nei settings nella variabile TEMPLATE.DIRS+/registration. Quando si aggiungono applicazioni terze questa è una situazione tipica.
 
-# Comandi base di Django
+## Comandi base di Django
 ```
 python manage.py makemigrations grestmanager
 python manage.py sqlmigrate grestmanager 0003
 python manage.py migrate
 ```
 
-# Come usare django-registration per migliorare il sistema di registrazione
+## Come usare django-registration per migliorare il sistema di registrazione
 - Si installa l'applicazione con
 ```
     pip install django-registration
@@ -53,7 +54,7 @@ TEMPLATES = [
 Per utilizzare django-registration al meglio bisognerebbe configurare un server smtp con un servizio che non vada a finire direttamente nella spam. Di solito questi servizi sono costosi (tipo sendgrid.com) e quindi per il momento ci si accontenta di una autenticazione senza verifica della mail.
 Un'applicazione alternativa che comprende anche alcuni SSO è django-allauth. 
 
-# Gestire il database
+## Gestire il database
 
 La sequenza perfetta per un reset totale di un'app è:
 ```
@@ -76,7 +77,7 @@ python manage.py migrate
 ```  
 A quel punto il database viene rigenerato completamente.
 
-# Per usare .env in Django
+## Per usare .env in Django
 Esempio .env:
 ```
 DEBUG=True
@@ -84,7 +85,7 @@ SECRET_KEY=tua-chiave-segreta-molto-lunga
 DATABASE_URL=sqlite:///db.sqlite3
 # Esempio per Postgres: postgres://user:password@localhost:5432/dbname
 ```
-## Usando django-environ
+### Usando django-environ
 ```
 pip install django-environ
 ```
@@ -112,7 +113,7 @@ DATABASES = {
 }
 ```
 
-## Usando os.environ
+### Usando os.environ
 ```
 import os
 from dotenv import load_dotenv # Opzionale, vedi sotto
@@ -139,7 +140,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ```
 
-# Gestione file statici
+## Gestione file statici
 In settings.py settare la variabile:
 ```
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
