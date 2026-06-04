@@ -140,6 +140,28 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ```
 
+## Postgres di sviluppo con Docker
+Per sviluppare in locale con un database identico alla produzione (Postgres) si usa il `docker-compose.yml` nella root del repo. È volutamente minimale: avvia **solo** il database, mentre Django continua a girare sull'host con `runserver` (nessuna immagine custom da buildare).
+
+Imposta nel file `.env` in `grestmanager-project/` la `DATABASE_URL` con le credenziali che combaciano con quelle del compose:
+```
+DATABASE_URL=postgres://grestmanager:grestmanager@localhost:5432/grestmanager
+```
+Poi:
+```bash
+docker compose up -d                     # avvia Postgres in background (dalla root del repo)
+cd grestmanager-project && python manage.py migrate
+python manage.py runserver
+```
+Comandi utili:
+```bash
+docker compose down       # ferma il container (i dati restano nel volume pgdata)
+docker compose down -v    # ferma e cancella anche i dati
+```
+Note:
+- Le credenziali (`grestmanager`/`grestmanager`/`grestmanager`) sono solo per lo sviluppo locale; in produzione resta la `DATABASE_URL` fornita da Railway.
+- I dati persistono nel volume `pgdata`; usa `docker compose down -v` per ripartire da un database pulito.
+
 ## Gestione file statici
 In settings.py settare la variabile:
 ```

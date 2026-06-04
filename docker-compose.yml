@@ -1,0 +1,29 @@
+# Postgres di sviluppo per Grest Manager.
+# Avvia solo il database; l'app Django gira sull'host con `python manage.py runserver`.
+# Le credenziali qui sotto devono combaciare con DATABASE_URL nel .env:
+#   DATABASE_URL=postgres://grestmanager:grestmanager@localhost:5432/grestmanager
+#
+# Uso:
+#   docker compose up -d      # avvia Postgres in background
+#   docker compose down       # ferma il container (i dati restano nel volume)
+#   docker compose down -v    # ferma e cancella anche i dati
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: grestmanager
+      POSTGRES_USER: grestmanager
+      POSTGRES_PASSWORD: grestmanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grestmanager -d grestmanager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
