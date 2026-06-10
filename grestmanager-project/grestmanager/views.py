@@ -1,3 +1,4 @@
+import csv
 import logging
 
 from django.http import Http404, HttpResponseRedirect
@@ -121,7 +122,30 @@ class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
     # Questo dice a Django dove andare dopo il salvataggio
     success_url = reverse_lazy('grestmanager:persons')    
 
-# Sono costretto a usare una function based view per poter usare i decoratori di login e permission, altrimenti con le class based view dovrei usare i mixin, 
+@login_required
+def persons_export_csv(request):
+    # Export riservato allo staff: esporta TUTTE le anagrafiche in CSV
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to export the persons.")
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="anagrafiche.csv"'
+    response.write("\ufeff")  # BOM UTF-8: Excel mostra correttamente gli accenti
+
+    writer = csv.writer(response)
+    writer.writerow(["Nome", "Cognome", "Data di Nascita", "Codice Fiscale", "Gestito da"])
+    # select_related evita una query per ogni riga per leggere lo username del gestore
+    for person in Person.objects.select_related("managed_by").order_by("surname", "name"):
+        writer.writerow([
+            person.name,
+            person.surname,
+            person.birth_date.strftime("%d/%m/%Y"),
+            person.tax_code,
+            person.managed_by.username,
+        ])
+    return response
+
+# Sono costretto a usare una function based view per poter usare i decoratori di login e permission, altrimenti con le class based view dovrei usare i mixin,
 # ma non riesco a farli funzionare insieme alla logica di filtraggio delle sottoscrizioni per persona e utente loggato, quindi preferisco questa soluzione più semplice
 @login_required
 @permission_required("grestmanager.add_subscription", raise_exception=True) #Non funziona con le class based view, per questo uso i mixin

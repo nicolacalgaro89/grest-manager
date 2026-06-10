@@ -10,6 +10,7 @@ urlpatterns = [
     path("persons/<int:person_id>/", views.PersonDetailView.as_view(), name="person_detail"),
     path("persons/", views.PersonsListView.as_view(), name="persons"),
     path("persons/create/", views.PersonCreateView.as_view(), name="person_create"),
+    path("persons/export/csv/", views.persons_export_csv, name="persons_export_csv"),
     path("persons/<int:person_id>/update/", views.PersonUpdateView.as_view(), name="person_update"),
     path("persons/<int:person_id>/delete/", views.PersonDeleteView.as_view(), name="person_delete"),
     path("persons/<int:person_id>/subscriptions/", views.subscriptions, name="subscriptions"),

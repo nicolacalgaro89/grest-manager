@@ -56,6 +56,10 @@
             <tr>
                 <td colspan="{% if user.is_staff %}6{% else %}5{% endif %}" class="text-center">
                     <a href="{% url 'grestmanager:person_create' %}" class="btn btn-primary">Aggiungi anagrafica</a>
+                    {# Export CSV: solo per lo staff #}
+                    {% if user.is_staff %}
+                    <a href="{% url 'grestmanager:persons_export_csv' %}" class="btn btn-outline-secondary">CSV Export</a>
+                    {% endif %}
                 </td>
             </tr>
         </tfoot>

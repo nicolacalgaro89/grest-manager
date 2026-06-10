@@ -347,3 +347,36 @@ class RegisterViewTests(TestCase):
         r = self._register()
         self.assertEqual(r.status_code, 302)
         self.assertTrue(User.objects.filter(username="nuovo").exists())
+
+
+# ----------------------------------------------------------------------------
+# Export CSV delle anagrafiche (solo staff)
+# ----------------------------------------------------------------------------
+class CsvExportTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_user("staff", password="pw", is_staff=True)
+        cls.owner = User.objects.create_user("owner", password="pw")
+        # due anagrafiche di gestori diversi: l'export staff deve contenerle entrambe
+        cls.p1 = Person.objects.create(name="Anna", surname="Neri", birth_date=timezone.now(),
+            tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
+        cls.p2 = Person.objects.create(name="Bruno", surname="Verdi", birth_date=timezone.now(),
+            tax_code="VRDBRN70B02F205Y", managed_by=cls.staff)
+
+    def test_staff_scarica_csv_con_tutte_le_anagrafiche(self):
+        self.client.force_login(self.staff)
+        r = self.client.get(reverse("grestmanager:persons_export_csv"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r["Content-Type"], "text/csv")
+        self.assertIn("anagrafiche.csv", r["Content-Disposition"])
+        body = r.content.decode("utf-8")
+        self.assertIn("Nome,Cognome,Data di Nascita,Codice Fiscale,Gestito da", body)
+        self.assertIn("NRINNA80A01F205Z", body)   # anagrafica di owner
+        self.assertIn("VRDBRN70B02F205Y", body)   # anagrafica di staff
+        self.assertIn("owner", body)              # colonna "Gestito da"
+
+    def test_non_staff_403_su_export(self):
+        self.client.force_login(self.owner)
+        r = self.client.get(reverse("grestmanager:persons_export_csv"))
+        self.assertEqual(r.status_code, 403)
