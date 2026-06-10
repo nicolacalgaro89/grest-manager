@@ -207,3 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 django-training
+
+# Playwright MCP: snapshot, log e screenshot generati durante le sessioni
+.playwright-mcp/
