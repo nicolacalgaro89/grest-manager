@@ -162,6 +162,24 @@ Note:
 - Le credenziali (`grestmanager`/`grestmanager`/`grestmanager`) sono solo per lo sviluppo locale; in produzione resta la `DATABASE_URL` fornita da Railway.
 - I dati persistono nel volume `pgdata`; usa `docker compose down -v` per ripartire da un database pulito.
 
+## Database di test
+I test si lanciano con:
+```bash
+python manage.py test                 # tutta la suite
+python manage.py test grestmanager    # solo l'app
+```
+Non serve preparare nulla a mano: il **test runner di Django crea e distrugge da solo un database dedicato**. In pratica:
+
+1. Prende la connessione `default` (quella di `DATABASE_URL`) e crea un nuovo database con il nome reale preceduto da `test_` → **`test_grestmanager`** sullo stesso server Postgres. Questo richiede che l'utente del DB possa creare database: l'utente del Postgres in Docker è superuser, quindi va bene.
+2. Applica le migrazioni sul DB di test (parte **vuoto**, senza i dati di sviluppo).
+3. Esegue ogni test dentro una transazione che viene annullata alla fine (`TestCase`): i test sono isolati e non lasciano residui.
+4. Al termine **distrugge** il database di test.
+
+Conseguenze utili:
+- I dati del database di sviluppo **non vengono toccati**: i test girano su `test_grestmanager`, non su `grestmanager`.
+- Durante i test Django aggiunge automaticamente `testserver` ad `ALLOWED_HOSTS`, quindi il `Client` di test funziona senza configurazioni aggiuntive.
+- `python manage.py test --keepdb` riusa il database di test tra un'esecuzione e l'altra (esecuzioni più veloci).
+
 ## Gestione file statici
 In settings.py settare la variabile:
 ```
