@@ -282,10 +282,17 @@ class AuthAndPermissionTests(TestCase):
         cls.senza_permessi = User.objects.create_user("nopermessi", password="pw")
 
     def test_utente_non_autenticato_reindirizzato_al_login(self):
-        # person_create usa il solo LoginRequiredMixin: l'anonimo viene mandato al login
-        r = self.client.get(reverse("grestmanager:person_create"))
-        self.assertEqual(r.status_code, 302)
-        self.assertIn("/accounts/login/", r.url)
+        # Anche le view con controllo di proprietà reindirizzano l'anonimo al login (non 403)
+        urls = [
+            reverse("grestmanager:person_create"),
+            reverse("grestmanager:person_detail", kwargs={"person_id": self.person.id}),
+            reverse("grestmanager:person_update", kwargs={"person_id": self.person.id}),
+            reverse("grestmanager:person_delete", kwargs={"person_id": self.person.id}),
+        ]
+        for url in urls:
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 302, url)
+            self.assertIn("/accounts/login/", r.url, url)
 
     def test_utente_senza_permesso_403_sulla_lista(self):
         self.client.force_login(self.senza_permessi)

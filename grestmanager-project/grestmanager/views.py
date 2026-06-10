@@ -41,6 +41,9 @@ class PersonDetailView(LoginRequiredMixin, generic.DetailView):
     
     # Verify that the logged-in user is the manager of the person being viewed
     def dispatch(self, request, *args, **kwargs):
+        # L'anonimo va reindirizzato al login da LoginRequiredMixin, non bloccato con 403
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         person = self.get_object()
         # Lo staff può vedere qualsiasi anagrafica, non solo le proprie
         if person.managed_by != request.user and not request.user.is_staff:
@@ -94,6 +97,8 @@ class PersonUpdateView(LoginRequiredMixin, generic.UpdateView):
     pk_url_kwarg = "person_id"
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         person = self.get_object()
         if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to update this person.")
@@ -107,6 +112,8 @@ class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
     pk_url_kwarg = "person_id"
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         person = self.get_object()
         if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this person.")
@@ -133,6 +140,8 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
 
     # Solo il gestore della persona (o lo staff) può iscriverla
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         person = get_object_or_404(Person, id=self.kwargs.get('person_id'))
         if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to add a subscription for this person.")
@@ -183,6 +192,8 @@ class SubscriptionDeleteView(LoginRequiredMixin, generic.DeleteView):
 
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         subscription = self.get_object()
         if subscription.related_to.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this subscription.")
@@ -201,6 +212,8 @@ class SubscriptionDetailView(LoginRequiredMixin, generic.DetailView):
 
     # Verifichiamo che l'utente loggato sia il gestore della persona a cui appartiene l'iscrizione
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         subscription = self.get_object()
         # Lo staff può vedere qualsiasi iscrizione
         if subscription.related_to.managed_by != request.user and not request.user.is_staff:
@@ -238,6 +251,8 @@ class TimeEntryCreateView(LoginRequiredMixin, generic.CreateView):
         return initial
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         person = get_object_or_404(Person, id=self.kwargs.get('person_id'))
         if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to add a time entry for this person.")
