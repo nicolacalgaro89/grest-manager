@@ -17,6 +17,7 @@
         <thead>
             <tr>
                 <th>Data</th>
+                <th>Evento</th>
                 <th>Entrata/Uscita</th>
                 <th>Note</th>
             </tr>
@@ -25,6 +26,7 @@
             {% for time_entry in time_entry_list %}
             <tr>
                 <td>{{ time_entry.timestamp }}</td>
+                <td>{{ time_entry.to_event.name }}</td>
                 <td>{{ time_entry.entry_type }}</td>
                 <td>{{ time_entry.remarks }}</td>
             </tr>
@@ -33,7 +35,7 @@
         <!--Create button to add a new time entry-->
         <tfoot>
             <tr>
-                <td colspan="3" class="text-center">
+                <td colspan="4" class="text-center">
                     <a href="{% url 'grestmanager:time_entry_create' person_id=person.id %}?entry_type=IN" class="btn btn-primary me-2">Aggiungi Ingresso</a>
                     <a href="{% url 'grestmanager:time_entry_create' person_id=person.id %}?entry_type=OUT" class="btn btn-primary">Aggiungi Uscita</a>
                 </td>

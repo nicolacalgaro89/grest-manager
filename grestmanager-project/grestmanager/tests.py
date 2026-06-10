@@ -257,7 +257,9 @@ class TimeEntryAccessTests(TestCase):
         cls.other = User.objects.create_user("other", password="pw")
         cls.person = Person.objects.create(name="Anna", surname="Neri",
             birth_date=timezone.now(), tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
-        cls.entry = TimeEntry.objects.create(entry_type=EntryType.IN, remarks="ingresso", related_to=cls.person)
+        cls.event = _make_event("Grest Estate")
+        cls.entry = TimeEntry.objects.create(entry_type=EntryType.IN, remarks="ingresso",
+            related_to=cls.person, to_event=cls.event)
 
     def test_estraneo_non_vede_presenze_altrui(self):
         self.client.force_login(self.other)
@@ -278,6 +280,30 @@ class TimeEntryAccessTests(TestCase):
         self.client.force_login(self.staff)
         r = self.client.get(reverse("grestmanager:time_entry_create", kwargs={"person_id": self.person.id}))
         self.assertEqual(r.status_code, 200)
+
+    # Evento sulla presenza
+    def test_dropdown_evento_solo_attivi(self):
+        evento_spento = _make_event("Spento", active=False)
+        self.client.force_login(self.owner)
+        r = self.client.get(reverse("grestmanager:time_entry_create", kwargs={"person_id": self.person.id}))
+        eventi = list(r.context["form"].fields["to_event"].queryset)
+        self.assertIn(self.event, eventi)
+        self.assertNotIn(evento_spento, eventi)
+
+    def test_parametro_event_preseleziona_evento(self):
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:time_entry_create", kwargs={"person_id": self.person.id})
+        r = self.client.get(url + f"?event={self.event.id}")
+        self.assertEqual(str(r.context["form"].initial.get("to_event")), str(self.event.id))
+
+    def test_creazione_presenza_salva_evento(self):
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:time_entry_create", kwargs={"person_id": self.person.id})
+        r = self.client.post(url, {"entry_type": EntryType.IN, "to_event": self.event.id, "remarks": "prova"})
+        self.assertEqual(r.status_code, 302)
+        creata = TimeEntry.objects.filter(related_to=self.person, remarks="prova").first()
+        self.assertIsNotNone(creata)
+        self.assertEqual(creata.to_event, self.event)
 
 
 # ----------------------------------------------------------------------------

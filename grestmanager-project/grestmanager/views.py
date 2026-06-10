@@ -257,7 +257,7 @@ def time_entries(request, person_id):
 class TimeEntryCreateView(LoginRequiredMixin, generic.CreateView):
     model = TimeEntry
     template_name = "grestmanager/time_entry_create.html"
-    fields = ['entry_type', 'remarks'] # Campi per la creazione di una nuova voce di tempo
+    fields = ['entry_type', 'to_event', 'remarks'] # Campi per la creazione di una nuova voce di tempo
 
     # passo person_id al contesto per poterlo usare nel template
     def get_context_data(self, **kwargs):
@@ -267,11 +267,21 @@ class TimeEntryCreateView(LoginRequiredMixin, generic.CreateView):
         context['person'] = person
         return context
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Nel menù a tendina mostriamo solo gli eventi attivi
+        form.fields['to_event'].queryset = Event.objects.filter(active=True)
+        return form
+
     def get_initial(self):
         initial = super().get_initial()
         entry_type = self.request.GET.get('entry_type')
         if entry_type in [choice[0] for choice in EntryType.choices]:
             initial['entry_type'] = entry_type
+        # Pre-seleziona l'evento se passato come parametro (?event=<id>) ed è attivo
+        event_id = self.request.GET.get('event')
+        if event_id and Event.objects.filter(pk=event_id, active=True).exists():
+            initial['to_event'] = event_id
         return initial
 
     def dispatch(self, request, *args, **kwargs):

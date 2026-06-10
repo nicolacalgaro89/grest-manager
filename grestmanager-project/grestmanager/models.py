@@ -64,8 +64,14 @@ class TimeEntry(models.Model):
     remarks = models.CharField(max_length=200, blank=True)
     
     related_to = models.ForeignKey(
-        "Person", 
-        on_delete=models.CASCADE, 
+        "Person",
+        on_delete=models.CASCADE,
         related_name="time_entries")
+    # Evento a cui si riferisce la presenza
+    to_event = models.ForeignKey(
+        "Event",
+        on_delete=models.CASCADE,
+        related_name="time_entries",
+        verbose_name="Evento")
     def __str__(self):
         return self.timestamp.strftime("%Y-%m-%d %H:%M:%S") + " - " + self.remarks
