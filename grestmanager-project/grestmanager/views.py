@@ -38,7 +38,8 @@ class PersonDetailView(LoginRequiredMixin, generic.DetailView):
     # Verify that the logged-in user is the manager of the person being viewed
     def dispatch(self, request, *args, **kwargs):
         person = self.get_object()
-        if person.managed_by != request.user:
+        # Lo staff può vedere qualsiasi anagrafica, non solo le proprie
+        if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to view this person.")
         return super().dispatch(request, *args, **kwargs)
 
@@ -63,7 +64,11 @@ class PersonsListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListV
     # permission_denied_message = "You do not have permission to view this page." # Only for log purose, not for the message shown to the user
 
     def get_queryset(self):
-        return Person.objects.order_by("-birth_date").filter(managed_by=self.request.user) # Mostro solo le persone gestite dall'utente loggato
+        persons = Person.objects.order_by("-birth_date")
+        # Lo staff vede tutte le anagrafiche; gli altri solo quelle che gestiscono
+        if self.request.user.is_staff:
+            return persons
+        return persons.filter(managed_by=self.request.user)
 
 class PersonCreateView(LoginRequiredMixin, generic.CreateView):
     model = Person
@@ -86,7 +91,7 @@ class PersonUpdateView(LoginRequiredMixin, generic.UpdateView):
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
         person = self.get_object()
-        if person.managed_by != request.user:
+        if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to update this person.")
         return super().dispatch(request, *args, **kwargs)
     # Questo dice a Django dove andare dopo il salvataggio
@@ -99,7 +104,7 @@ class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
         person = self.get_object()
-        if person.managed_by != request.user:
+        if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this person.")
         return super().dispatch(request, *args, **kwargs)
     # Questo dice a Django dove andare dopo il salvataggio
@@ -111,7 +116,9 @@ class PersonDeleteView(LoginRequiredMixin, generic.DeleteView):
 @permission_required("grestmanager.add_subscription", raise_exception=True) #Non funziona con le class based view, per questo uso i mixin
 def subscriptions(request, person_id):
     person = get_object_or_404(Person, id=person_id) # Recuperi la persona dall'URL
-    subscription_list = Subscription.objects.order_by("-date").filter(related_to__managed_by=request.user, related_to=person) # Filtro le sottoscrizioni per mostrare solo quelle relative alla persona specificata nell'url e gestite dall'utente loggato
+    subscription_list = Subscription.objects.order_by("-date").filter(related_to=person) # Iscrizioni della persona indicata nell'url
+    if not request.user.is_staff: # gli utenti non staff vedono solo le persone che gestiscono
+        subscription_list = subscription_list.filter(related_to__managed_by=request.user)
     context = {"subscription_list": subscription_list, "person": person} # Passo anche la persona al contesto per poterla mostrare nella pagina
     return render(request, "grestmanager/subscriptions.html", context)
 
@@ -165,7 +172,7 @@ class SubscriptionDeleteView(LoginRequiredMixin, generic.DeleteView):
     # Verifichiamo che l'utente loggato è il gestore della persona che vuole eliminare
     def dispatch(self, request, *args, **kwargs):
         subscription = self.get_object()
-        if subscription.related_to.managed_by != request.user:
+        if subscription.related_to.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this subscription.")
         return super().dispatch(request, *args, **kwargs)
 
@@ -183,14 +190,17 @@ class SubscriptionDetailView(LoginRequiredMixin, generic.DetailView):
     # Verifichiamo che l'utente loggato sia il gestore della persona a cui appartiene l'iscrizione
     def dispatch(self, request, *args, **kwargs):
         subscription = self.get_object()
-        if subscription.related_to.managed_by != request.user:
+        # Lo staff può vedere qualsiasi iscrizione
+        if subscription.related_to.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to view this subscription.")
         return super().dispatch(request, *args, **kwargs)
 
 @login_required
 def time_entries(request, person_id):
     person = get_object_or_404(Person, id=person_id) # Recuperi la persona dall'URL
-    time_entry_list = TimeEntry.objects.order_by("-timestamp").filter(related_to__managed_by=request.user, related_to=person) # Filtro le voci di tempo per mostrare solo quelle relative alla persona specificata nell'url e gestite dall'utente loggato
+    time_entry_list = TimeEntry.objects.order_by("-timestamp").filter(related_to=person) # Presenze della persona indicata nell'url
+    if not request.user.is_staff: # gli utenti non staff vedono solo le persone che gestiscono
+        time_entry_list = time_entry_list.filter(related_to__managed_by=request.user)
     context = {"time_entry_list": time_entry_list, "person": person} # Passo anche la persona al contesto per poterla mostrare nella pagina
     return render(request, "grestmanager/time_entries.html", context)
 
@@ -217,7 +227,7 @@ class TimeEntryCreateView(LoginRequiredMixin, generic.CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         person = get_object_or_404(Person, id=self.kwargs.get('person_id'))
-        if person.managed_by != request.user:
+        if person.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to add a time entry for this person.")
         return super().dispatch(request, *args, **kwargs)
 
