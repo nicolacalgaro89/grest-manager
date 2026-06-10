@@ -14,12 +14,12 @@
                     <p><strong>Cognome:</strong> {{ person.surname }}</p>
                     <p><strong>Data di Nascita:</strong> {{ person.birth_date|date:"d/m/Y" }}</p>
                     <p><strong>Codice Fiscale:</strong> {{ person.tax_code }}</p>
-                    <h3 class="mt-4">Iscrizioni</h3>
+                    <h3 class="mt-4">Iscrizioni attive</h3>
                     <ul class="list-group">
-                    {% for subscription in person.subscriptions.all %}
-                        <li class="list-group-item">{{ subscription.date|date:"d/m/Y" }}</li>
+                    {% for subscription in active_subscriptions %}
+                        <li class="list-group-item">{{ subscription.to_event.name }}</li>
                     {% empty %}
-                        <li class="list-group-item text-muted">Nessuna iscrizione trovata.</li>
+                        <li class="list-group-item text-muted">Nessuna iscrizione attiva.</li>
                     {% endfor %}
                     </ul>
                     <!-- Azioni sulla persona: su mobile è da qui che si raggiungono Iscrizioni/Presenze/Modifica

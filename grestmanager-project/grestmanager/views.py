@@ -41,7 +41,16 @@ class PersonDetailView(LoginRequiredMixin, generic.DetailView):
         if person.managed_by != request.user:
             raise PermissionDenied("You do not have permission to view this person.")
         return super().dispatch(request, *args, **kwargs)
-    
+
+    # Mostriamo solo le iscrizioni attive (riusiamo il metodo is_active() del modello)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_subscriptions'] = [
+            subscription for subscription in self.object.subscriptions.all()
+            if subscription.is_active()
+        ]
+        return context
+
 # Mixins MUST come before the generic view in the inheritance list
 class PersonsListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
     template_name = "grestmanager/persons.html"
@@ -165,7 +174,19 @@ class SubscriptionDeleteView(LoginRequiredMixin, generic.DeleteView):
         # Dopo il salvataggio, torna alla lista delle iscrizioni di quella persona
         person_id = self.get_object().related_to.id
         return reverse_lazy('grestmanager:subscriptions', kwargs={'person_id': person_id})
-    
+
+class SubscriptionDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Subscription
+    template_name = "grestmanager/subscription_detail.html"
+    pk_url_kwarg = "subscription_id"
+
+    # Verifichiamo che l'utente loggato sia il gestore della persona a cui appartiene l'iscrizione
+    def dispatch(self, request, *args, **kwargs):
+        subscription = self.get_object()
+        if subscription.related_to.managed_by != request.user:
+            raise PermissionDenied("You do not have permission to view this subscription.")
+        return super().dispatch(request, *args, **kwargs)
+
 @login_required
 def time_entries(request, person_id):
     person = get_object_or_404(Person, id=person_id) # Recuperi la persona dall'URL

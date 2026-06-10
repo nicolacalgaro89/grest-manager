@@ -1,0 +1,27 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Dettagli Iscrizione{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Dettagli Iscrizione</h2>
+                    <!--Mostra le informazioni disponibili sull'iscrizione-->
+                    <p><strong>Persona:</strong> {{ subscription.related_to.name }} {{ subscription.related_to.surname }}</p>
+                    <p><strong>Evento:</strong> {{ subscription.to_event.name }}</p>
+                    <p><strong>Data emissione:</strong> {{ subscription.date|date:"d/m/Y" }}</p>
+                    <p><strong>Prezzo:</strong> {{ subscription.price }}</p>
+                    <p><strong>Attiva:</strong> {{ subscription.is_active|yesno:"Sì,No" }}</p>
+                    <p><strong>Emessa di recente:</strong> {{ subscription.was_issued_recently|yesno:"Sì,No" }}</p>
+                    <div class="d-grid mt-4">
+                        <a href="{% url 'grestmanager:subscriptions' subscription.related_to.id %}" class="btn btn-secondary">Torna alle iscrizioni</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
