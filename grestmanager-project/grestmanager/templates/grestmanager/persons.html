@@ -21,6 +21,8 @@
                 <!-- Su mobile nascondiamo Data di Nascita e Codice Fiscale per lasciare spazio ai pulsanti azione -->
                 <th class="d-none d-lg-table-cell">Data di Nascita</th>
                 <th class="d-none d-lg-table-cell">Codice Fiscale</th>
+                {# Solo per lo staff e solo da desktop: chi gestisce l'anagrafica #}
+                {% if user.is_staff %}<th class="d-none d-lg-table-cell">Gestito da</th>{% endif %}
                 <th>Azioni</th>
             </tr>
         </thead>
@@ -32,6 +34,7 @@
                 <!--birth date in format dd/mm/yyyy-->
                 <td class="d-none d-lg-table-cell">{{ person.birth_date|date:"d/m/Y" }}</td>
                 <td class="d-none d-lg-table-cell">{{ person.tax_code }}</td>
+                {% if user.is_staff %}<td class="d-none d-lg-table-cell">{{ person.managed_by.username }}</td>{% endif %}
                 <!-- button iscrizioni-->
                 <!-- Su mobile (sotto lg) nascondiamo Iscrizioni/Presenze/Modifica: si fanno dalla pagina Dettagli.
                      Rimuovi e Dettagli restano sempre visibili. text-nowrap li tiene sulla stessa riga. -->
@@ -51,7 +54,7 @@
         <!--Create button to add a new person -->
         <tfoot>
             <tr>
-                <td colspan="5" class="text-center">
+                <td colspan="{% if user.is_staff %}6{% else %}5{% endif %}" class="text-center">
                     <a href="{% url 'grestmanager:person_create' %}" class="btn btn-primary">Aggiungi anagrafica</a>
                 </td>
             </tr>

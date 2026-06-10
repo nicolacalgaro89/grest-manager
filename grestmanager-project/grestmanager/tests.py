@@ -112,6 +112,18 @@ class OwnershipAuthorizationTests(TestCase):
         r = self.client.get(reverse("grestmanager:persons"))
         self.assertIn(self.person, r.context["persons_list"])
 
+    # Colonna "Gestito da" (solo per lo staff)
+    def test_staff_vede_colonna_gestito_da(self):
+        self.client.force_login(self.staff)
+        r = self.client.get(reverse("grestmanager:persons"))
+        self.assertContains(r, "Gestito da")               # intestazione colonna
+        self.assertContains(r, self.owner.username)         # username del gestore
+
+    def test_non_staff_non_vede_colonna_gestito_da(self):
+        self.client.force_login(self.owner)
+        r = self.client.get(reverse("grestmanager:persons"))
+        self.assertNotContains(r, "Gestito da")
+
     # Dettaglio
     def test_proprietario_apre_la_propria_anagrafica(self):
         self.client.force_login(self.owner)
