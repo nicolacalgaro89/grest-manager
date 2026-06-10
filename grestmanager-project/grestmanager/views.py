@@ -1,3 +1,5 @@
+import logging
+
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
@@ -14,7 +16,9 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from .models import Person, Subscription, Event, TimeEntry, EntryType
 from .forms import PersonForm
-from django.contrib.auth.models import Group          
+from django.contrib.auth.models import Group
+
+logger = logging.getLogger(__name__)
 
 # E' solo una landing page, non ha bisogno di dati dinamici, quindi non passo nessun contesto
 # add events list to the context in the future, so I can show them in the index page
@@ -127,6 +131,13 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
     fields = ['to_event'] # Non mettiamo 'user' qui, lo aggiungiamo noi via codice
     template_name = "grestmanager/subscription_create.html"
 
+    # Solo il gestore della persona (o lo staff) può iscriverla
+    def dispatch(self, request, *args, **kwargs):
+        person = get_object_or_404(Person, id=self.kwargs.get('person_id'))
+        if person.managed_by != request.user and not request.user.is_staff:
+            raise PermissionDenied("You do not have permission to add a subscription for this person.")
+        return super().dispatch(request, *args, **kwargs)
+
     # passo person_id al contesto per poterlo usare nel template
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -142,7 +153,8 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
         # 2. Recupera l'oggetto Person o restituisce 404
         person = get_object_or_404(Person, id=person_id)
 
-        if person.subscriptions.count() > 1:
+        # Una persona può avere una sola iscrizione: se ne ha già una, blocchiamo
+        if person.subscriptions.count() >= 1:
             form.add_error(None, "Questa persona è già iscritta.")
             return self.form_invalid(form)
         
@@ -257,14 +269,12 @@ class RegisterView(SuccessMessageMixin, generic.CreateView):
     success_message = "Il tuo account è stato creato con successo! Ora puoi effettuare il login."
     
     def form_valid(self, form):
-        print("DEBUG: Form valida! Sto per creare il messaggio.")
         form.instance.username = form.cleaned_data.get("username")  # Imposta il nome utente prima di salvare
         response = super().form_valid(form)
         try:
             base_group = Group.objects.get(name='BaseUsers')
             self.object.groups.add(base_group)
         except Group.DoesNotExist:
-            # Gestisci il caso in cui il gruppo non esista ancora nel DB
-            print("ERRORE: Il gruppo 'BaseUsers' non esiste!")
-        print(f"DEBUG: Success URL è: {self.get_success_url()}")
+            # Senza il gruppo BaseUsers il nuovo utente resta senza permessi (setup richiesto, vedi CLAUDE.md)
+            logger.error("Il gruppo 'BaseUsers' non esiste: il nuovo utente resta senza permessi.")
         return response
