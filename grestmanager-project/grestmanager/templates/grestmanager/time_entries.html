@@ -11,6 +11,8 @@
     {% else %}
     <p class="text-muted">Non è stata registrata nessuna presenza per questa anagrafica.</p>
     {% endif %}
+    <!-- table-responsive: scorrimento orizzontale su schermi stretti -->
+    <div class="table-responsive">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -38,6 +40,7 @@
             </tr>
         </tfoot>
     </table>
+    </div>
     <div class="text-center mt-3">
         <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Torna alle anagrafiche</a>
     </div>

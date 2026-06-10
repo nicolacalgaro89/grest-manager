@@ -22,6 +22,14 @@
                         <li class="list-group-item text-muted">Nessuna iscrizione trovata.</li>
                     {% endfor %}
                     </ul>
+                    <!-- Azioni sulla persona: su mobile è da qui che si raggiungono Iscrizioni/Presenze/Modifica
+                         (nella lista anagrafiche sono nascoste sotto lg) -->
+                    <h3 class="mt-4">Azioni</h3>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'grestmanager:subscriptions' person.pk %}" class="btn btn-info">Iscrizioni</a>
+                        <a href="{% url 'grestmanager:time_entries' person.pk %}" class="btn btn-success">Presenze</a>
+                        <a href="{% url 'grestmanager:person_update' person.pk %}" class="btn btn-warning">Modifica</a>
+                    </div>
                     <div class="d-grid mt-4">
                         <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Torna alle anagrafiche</a>
                     </div>

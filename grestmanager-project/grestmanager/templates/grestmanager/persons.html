@@ -11,13 +11,17 @@
     {% else %}
     <p class="text-muted">Non hai ancora aggiunto nessuna anagrafica. Clicca sul pulsante qui sotto per iniziare.</p>
     {% endif %}
+    <!-- table-responsive: su schermi stretti la tabella scorre in orizzontale invece di rompere il layout -->
+    <div class="table-responsive">
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>Nome</th>
                 <th>Cognome</th>
-                <th>Data di Nascita</th>
-                <th>Codice Fiscale</th>
+                <!-- Su mobile nascondiamo Data di Nascita e Codice Fiscale per lasciare spazio ai pulsanti azione -->
+                <th class="d-none d-lg-table-cell">Data di Nascita</th>
+                <th class="d-none d-lg-table-cell">Codice Fiscale</th>
+                <th>Azioni</th>
             </tr>
         </thead>
         <tbody>
@@ -26,16 +30,18 @@
                 <td>{{ person.name }}</td>
                 <td>{{ person.surname }}</td>
                 <!--birth date in format dd/mm/yyyy-->
-                <td>{{ person.birth_date|date:"d/m/Y" }}</td>
-                <td>{{ person.tax_code }}</td>
+                <td class="d-none d-lg-table-cell">{{ person.birth_date|date:"d/m/Y" }}</td>
+                <td class="d-none d-lg-table-cell">{{ person.tax_code }}</td>
                 <!-- button iscrizioni-->
-                <td>
+                <!-- Su mobile (sotto lg) nascondiamo Iscrizioni/Presenze/Modifica: si fanno dalla pagina Dettagli.
+                     Rimuovi e Dettagli restano sempre visibili. text-nowrap li tiene sulla stessa riga. -->
+                <td class="text-nowrap">
                     <a href="{% url 'grestmanager:subscriptions' person.pk %}"
-                        class="btn btn-sm btn-info">Iscrizioni</a>
+                        class="btn btn-sm btn-info d-none d-lg-inline-block">Iscrizioni</a>
                     <a href="{% url 'grestmanager:time_entries' person.pk %}"
-                        class="btn btn-sm btn-success">Presenze</a>
+                        class="btn btn-sm btn-success d-none d-lg-inline-block">Presenze</a>
                     <a href="{% url 'grestmanager:person_update' person.pk %}"
-                        class="btn btn-sm btn-warning">Modifica</a>
+                        class="btn btn-sm btn-warning d-none d-lg-inline-block">Modifica</a>
                     <a href="{% url 'grestmanager:person_delete' person.pk %}" class="btn btn-sm btn-danger">Rimuovi</a>
                     <a href="{% url 'grestmanager:person_detail' person.pk %}" class="btn btn-sm btn-secondary">Dettagli</a>
                 </td>
@@ -51,6 +57,7 @@
             </tr>
         </tfoot>
     </table>
+    </div>
 </div>
 
 {% endblock %}

@@ -5,6 +5,8 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- Indispensabile per il responsive: dice al browser mobile di usare la larghezza reale del dispositivo -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Grest Manager{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -12,30 +14,40 @@
 <body>
     <!-- Add logo to navbar -->
 
-    <nav class="navbar navbar-dark bg-dark mb-4">
+    <!-- navbar-expand-lg: barra estesa da large in su, collassata in hamburger sotto -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="{% url 'grestmanager:index' %}">
                 <img src="{% static 'grestmanager/images/ups_bakhita_logo.png' %}" alt="Logo" width="30" height="30"
                     class="d-inline-block align-text-top">
                 Grest App
             </a>
+            <!-- Pulsante hamburger: mostrato solo quando la navbar è collassata (mobile) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Apri menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Contenuto collassabile: su mobile finisce dentro il menu dell'hamburger -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Add actual user to navbar in the right corner -->
+                <!-- ms-auto allinea i comandi a destra su desktop; mt-2 mt-lg-0 dà spazio quando il menu è aperto su mobile -->
+                {% if user.is_authenticated %}
+                <div class="d-flex align-items-center ms-auto mt-2 mt-lg-0">
+                    <span class="navbar-text me-3">Benvenuto, {{ user.username }}!</span>
+                    <form action="{% url 'logout' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm me-2">Esci</button>
+                    </form>
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-light btn-sm">Cambia Password</a>
+                </div>
+                {% else %}
+                <div class="d-flex align-items-center ms-auto mt-2 mt-lg-0">
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Accedi</a>
+                    <a href="{% url 'grestmanager:register' %}" class="btn btn-outline-light btn-sm">Registrati</a>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        <!-- Add actual user to navbar in the right corner -->
-        {% if user.is_authenticated %}
-        <div class="d-flex align-items-center">
-            <span class="navbar-text me-3">Benvenuto, {{ user.username }}!</span>
-            <form action="{% url 'logout' %}" method="post" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-light btn-sm me-2">Esci</button>
-            </form>
-            <a href="{% url 'password_change' %}" class="btn btn-outline-light btn-sm">Cambia Password</a>
-        </div>
-        {% else %}
-        <div class="d-flex align-items-center">
-            <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Accedi</a>
-            <a href="{% url 'grestmanager:register' %}" class="btn btn-outline-light btn-sm">Registrati</a>
-        </div>
-        {% endif %}
     </nav>
 
     <main class="container">

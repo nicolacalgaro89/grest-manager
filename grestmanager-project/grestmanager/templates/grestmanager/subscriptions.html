@@ -11,12 +11,15 @@
     {% else %}
     <p class="text-muted">Non hai ancora aggiunto nessuna iscrizione per questa anagrafica.</p>
     {% endif %}
+    <!-- table-responsive: scorrimento orizzontale su schermi stretti -->
+    <div class="table-responsive">
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>Data</th>
                 <th>Evento</th>
                 <th>Attiva</th>
+                <th>Azioni</th>
             </tr>
         </thead>
         <tbody>
@@ -34,13 +37,14 @@
         <!--Create button to add a new subscription -->
         <tfoot>
             <tr>
-                <td colspan="3" class="text-center">
+                <td colspan="4" class="text-center">
                     <!-- link to create a new subscription for the related person -->
                     <a href="{% url 'grestmanager:subscription_create' person_id=person.id %}" class="btn btn-primary">Aggiungi Iscrizione</a>
                 </td>
             </tr>
         </tfoot>
     </table>
+    </div>
     <div class="text-center mt-3">
         <a href="{% url 'grestmanager:persons' %}" class="btn btn-secondary">Torna alle anagrafiche</a>
     </div>
