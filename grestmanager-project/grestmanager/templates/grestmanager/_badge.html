@@ -1,0 +1,28 @@
+{% comment %}
+Badge A4 piegabile in 4: ENTRATA e USCITA su quarti diagonali, la riga
+superiore è ruotata di 180° così che, a foglio piegato in quattro, un QR
+resti dritto sul fronte e l'altro dritto sul retro.
+Partial riutilizzabile: per la stampa bulk basta ripetere un .badge-a4 per persona.
+{% endcomment %}
+<div class="badge-a4">
+    {# alto-sinistra: USCITA (ruotata 180°) #}
+    <div class="quarter">
+        <div class="badge-content rot180">
+            <div class="qr">{{ badge.out_qr|safe }}</div>
+            <div class="label label-uscita">USCITA</div>
+            <div class="who">{{ badge.person.name }} {{ badge.person.surname }}<br>{{ badge.event.name }}</div>
+        </div>
+    </div>
+    {# alto-destra: vuoto #}
+    <div class="quarter"></div>
+    {# basso-sinistra: vuoto #}
+    <div class="quarter"></div>
+    {# basso-destra: ENTRATA (dritta) #}
+    <div class="quarter">
+        <div class="badge-content">
+            <div class="qr">{{ badge.in_qr|safe }}</div>
+            <div class="label label-entrata">ENTRATA</div>
+            <div class="who">{{ badge.person.name }} {{ badge.person.surname }}<br>{{ badge.event.name }}</div>
+        </div>
+    </div>
+</div>

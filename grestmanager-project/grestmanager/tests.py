@@ -406,3 +406,56 @@ class CsvExportTests(TestCase):
         self.client.force_login(self.owner)
         r = self.client.get(reverse("grestmanager:persons_export_csv"))
         self.assertEqual(r.status_code, 403)
+
+
+# ----------------------------------------------------------------------------
+# Badge presenze con QR (persona + evento)
+# ----------------------------------------------------------------------------
+class PresenceBadgeTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_user("staff", password="pw", is_staff=True)
+        cls.owner = User.objects.create_user("owner", password="pw")
+        cls.other = User.objects.create_user("other", password="pw")
+        cls.person = Person.objects.create(name="Anna", surname="Neri", birth_date=timezone.now(),
+            tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
+        cls.event = _make_event("Grest Estate")
+        cls.subscription = Subscription.objects.create(date=timezone.now(), price="0",
+            related_to=cls.person, to_event=cls.event)
+
+    def _url(self):
+        return reverse("grestmanager:presence_badge",
+                       kwargs={"person_id": self.person.id, "event_id": self.event.id})
+
+    def test_owner_apre_il_badge(self):
+        self.client.force_login(self.owner)
+        r = self.client.get(self._url())
+        self.assertEqual(r.status_code, 200)
+
+    def test_staff_apre_il_badge(self):
+        self.client.force_login(self.staff)
+        r = self.client.get(self._url())
+        self.assertEqual(r.status_code, 200)
+
+    def test_estraneo_403_sul_badge(self):
+        self.client.force_login(self.other)
+        r = self.client.get(self._url())
+        self.assertEqual(r.status_code, 403)
+
+    def test_badge_contiene_link_assoluti_in_out_e_qr(self):
+        self.client.force_login(self.owner)
+        body = self.client.get(self._url()).content.decode()
+        # URL assoluti (host della richiesta) con i parametri corretti
+        self.assertIn("http://testserver", body)
+        self.assertIn(f"entry_type=IN&amp;event={self.event.id}", body)
+        self.assertIn(f"entry_type=OUT&amp;event={self.event.id}", body)
+        # etichette e QR (due SVG)
+        self.assertIn("ENTRATA", body)
+        self.assertIn("USCITA", body)
+        self.assertGreaterEqual(body.count("<svg"), 2)
+
+    def test_pulsante_badge_presente_in_person_detail(self):
+        self.client.force_login(self.owner)
+        r = self.client.get(reverse("grestmanager:person_detail", kwargs={"person_id": self.person.id}))
+        self.assertContains(r, self._url())

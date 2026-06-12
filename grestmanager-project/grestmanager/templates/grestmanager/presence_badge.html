@@ -1,0 +1,81 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Badge presenze{% endblock %}
+
+{% block content %}
+<style>
+    /* Il badge A4 è nascosto a schermo e mostrato solo in stampa */
+    .badge-a4 { display: none; }
+    .badge-a4 .quarter { display: flex; align-items: center; justify-content: center; }
+    .badge-a4 .rot180 { transform: rotate(180deg); }
+    .badge-content { text-align: center; }
+    .badge-content .qr { width: 60mm; margin: 0 auto; }
+    .badge-content .qr svg { width: 60mm; height: 60mm; }
+    .badge-content .label {
+        display: inline-block;
+        font-size: 28pt; font-weight: 700; letter-spacing: 3px;
+        margin-top: 4mm; padding: 2mm 8mm; border-radius: 4mm;
+        color: #fff;
+        /* forza la stampa degli sfondi colorati */
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+    }
+    .badge-content .label-entrata { background-color: #198754; } /* verde */
+    .badge-content .label-uscita  { background-color: #dc3545; } /* rosso */
+    .badge-content .who { font-size: 11pt; color: #333; margin-top: 2mm; }
+
+    @media print {
+        @page { size: A4; margin: 0; }
+        body { margin: 0; }
+        /* nascondo navbar, footer e tutta la parte "a schermo" */
+        nav.navbar, footer, .d-print-none { display: none !important; }
+        .badge-a4 {
+            display: grid !important;
+            width: 210mm; height: 297mm;
+            grid-template-columns: 105mm 105mm;
+            grid-template-rows: 148.5mm 148.5mm;
+        }
+    }
+</style>
+
+<!-- Anteprima e comandi (solo a schermo) -->
+<div class="d-print-none">
+    <div class="container mt-4">
+        <h1 class="text-center mb-2">Badge presenze</h1>
+        <p class="text-center text-muted">
+            {{ badge.person.name }} {{ badge.person.surname }} &middot; {{ badge.event.name }}
+        </p>
+
+        <div class="row justify-content-center g-4 mt-2">
+            <div class="col-md-5">
+                <div class="card shadow text-center h-100">
+                    <div class="card-body">
+                        <h2 class="card-title"><span class="badge text-bg-success fs-4">ENTRATA</span></h2>
+                        <div class="mx-auto" style="max-width: 220px;">{{ badge.in_qr|safe }}</div>
+                        <a href="{{ badge.in_url }}" class="d-block mt-3 small text-break">{{ badge.in_url }}</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card shadow text-center h-100">
+                    <div class="card-body">
+                        <h2 class="card-title"><span class="badge text-bg-danger fs-4">USCITA</span></h2>
+                        <div class="mx-auto" style="max-width: 220px;">{{ badge.out_qr|safe }}</div>
+                        <a href="{{ badge.out_url }}" class="d-block mt-3 small text-break">{{ badge.out_url }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="button" class="btn btn-primary" onclick="window.print()">Stampa badge</button>
+            <a href="{% url 'grestmanager:person_detail' person_id=badge.person.id %}" class="btn btn-secondary">Torna ai dettagli</a>
+        </div>
+        <p class="text-center text-muted small mt-3">
+            Suggerimento: stampa in A4 e piega il foglio in quattro — un QR sul fronte (ENTRATA) e uno sul retro (USCITA).
+        </p>
+    </div>
+</div>
+
+<!-- Artefatto di stampa A4 -->
+{% include 'grestmanager/_badge.html' with badge=badge %}
+{% endblock %}

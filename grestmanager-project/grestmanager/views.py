@@ -1,5 +1,9 @@
 import csv
+import io
 import logging
+
+import qrcode
+import qrcode.image.svg
 
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -144,6 +148,41 @@ def persons_export_csv(request):
             person.managed_by.username,
         ])
     return response
+
+def _qr_svg(data):
+    """QR code come SVG inline, senza il prologo <?xml?> (non valido dentro l'HTML)."""
+    img = qrcode.make(data, image_factory=qrcode.image.svg.SvgPathImage)
+    buf = io.BytesIO()
+    img.save(buf)
+    svg = buf.getvalue().decode()
+    if svg.lstrip().startswith("<?xml"):
+        svg = svg.split("?>", 1)[-1].strip()
+    return svg
+
+def build_badge(person, event, request):
+    """Dati di un badge presenze: URL assoluti IN/OUT (host della richiesta, quindi
+    corretti anche in produzione) e relativi QR SVG. Riutilizzabile per la pagina
+    singola e per la futura stampa bulk."""
+    base = reverse("grestmanager:time_entry_create", kwargs={"person_id": person.id})
+    in_url = request.build_absolute_uri(f"{base}?entry_type=IN&event={event.id}")
+    out_url = request.build_absolute_uri(f"{base}?entry_type=OUT&event={event.id}")
+    return {
+        "person": person,
+        "event": event,
+        "in_url": in_url,
+        "out_url": out_url,
+        "in_qr": _qr_svg(in_url),
+        "out_qr": _qr_svg(out_url),
+    }
+
+@login_required
+def presence_badge(request, person_id, event_id):
+    # Accesso: gestore della persona o staff (l'anonimo viene reindirizzato da @login_required)
+    person = get_object_or_404(Person, id=person_id)
+    if person.managed_by != request.user and not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this badge.")
+    event = get_object_or_404(Event, id=event_id)
+    return render(request, "grestmanager/presence_badge.html", {"badge": build_badge(person, event, request)})
 
 # Sono costretto a usare una function based view per poter usare i decoratori di login e permission, altrimenti con le class based view dovrei usare i mixin,
 # ma non riesco a farli funzionare insieme alla logica di filtraggio delle sottoscrizioni per persona e utente loggato, quindi preferisco questa soluzione più semplice

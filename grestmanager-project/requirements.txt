@@ -7,6 +7,7 @@ gunicorn==25.1.0
 packaging==26.0
 psycopg==3.3.2
 python-dotenv==1.2.1
+qrcode==8.2
 sqlparse==0.5.5
 typing_extensions==4.15.0
 whitenoise==6.12.0
