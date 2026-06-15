@@ -86,8 +86,7 @@ class Subscription(models.Model):
         return self.date >= timezone.now() - datetime.timedelta(days=1)
 
     def is_active(self):
-        now = timezone.now()
-        return self.to_event.active and self.to_event.subscription_opening_date <= now <= self.to_event.subscription_closing_date
+        return self.to_event.active
 
     def calculate_price(self):
         """Prezzo calcolato dinamicamente dalle fasce scelte e dai prezzi dell'evento."""

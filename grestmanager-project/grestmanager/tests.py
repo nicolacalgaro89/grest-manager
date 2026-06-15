@@ -54,11 +54,13 @@ class ModelMethodTests(TestCase):
             related_to=self.person, to_event=_make_event("Attivo", active=True))
         evento_spento = Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=_make_event("Spento", active=False))
+        # Evento attivo ma con finestra di iscrizione ormai chiusa
         finestra_chiusa = Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=_make_event("Chiuso", active=True, opens_days_ago=10, closes_in_days=-5))
         self.assertTrue(attivo.is_active())
         self.assertFalse(evento_spento.is_active())
-        self.assertFalse(finestra_chiusa.is_active())
+        # is_active() dipende solo da event.active: la finestra chiusa NON conta più
+        self.assertTrue(finestra_chiusa.is_active())
 
     def test_subscription_was_issued_recently(self):
         ev = _make_event()
