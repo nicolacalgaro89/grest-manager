@@ -13,7 +13,7 @@
                     <p><strong>Persona:</strong> {{ subscription.related_to.name }} {{ subscription.related_to.surname }}</p>
                     <p><strong>Evento:</strong> {{ subscription.to_event.name }}</p>
                     <p><strong>Data emissione:</strong> {{ subscription.date|date:"d/m/Y" }}</p>
-                    <p><strong>Prezzo:</strong> {{ subscription.price }}</p>
+                    <p><strong>Prezzo:</strong> {{ subscription.current_price }}</p>
                     <p><strong>Attiva:</strong> {{ subscription.is_active|yesno:"Sì,No" }}</p>
                     <p><strong>Emessa di recente:</strong> {{ subscription.was_issued_recently|yesno:"Sì,No" }}</p>
                     <div class="d-grid mt-4">

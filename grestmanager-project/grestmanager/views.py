@@ -233,8 +233,8 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
         # 3. Collega la persona all'istanza della sottoscrizione che sta per essere creata
         form.instance.related_to = person
         form.instance.date = timezone.now()  # Impostiamo la data di creazione
-        form.instance.price = "0"  # Impostiamo un prezzo di default
-        
+        # Il prezzo non è più un campo: è calcolato da Subscription.calculate_price()
+
         # 4. Chiama il metodo originale per salvare i dati
         return super().form_valid(form)
 

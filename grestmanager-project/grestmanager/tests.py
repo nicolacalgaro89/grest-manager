@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.test import TestCase
 from django.urls import reverse
@@ -49,11 +50,11 @@ class ModelMethodTests(TestCase):
         self.assertFalse(passato.is_subscription_open())
 
     def test_subscription_is_active(self):
-        attivo = Subscription.objects.create(date=timezone.now(), price="0",
+        attivo = Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=_make_event("Attivo", active=True))
-        evento_spento = Subscription.objects.create(date=timezone.now(), price="0",
+        evento_spento = Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=_make_event("Spento", active=False))
-        finestra_chiusa = Subscription.objects.create(date=timezone.now(), price="0",
+        finestra_chiusa = Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=_make_event("Chiuso", active=True, opens_days_ago=10, closes_in_days=-5))
         self.assertTrue(attivo.is_active())
         self.assertFalse(evento_spento.is_active())
@@ -61,10 +62,10 @@ class ModelMethodTests(TestCase):
 
     def test_subscription_was_issued_recently(self):
         ev = _make_event()
-        recente = Subscription.objects.create(date=timezone.now(), price="0",
+        recente = Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=ev)
         vecchia = Subscription.objects.create(
-            date=timezone.now() - datetime.timedelta(days=2), price="0",
+            date=timezone.now() - datetime.timedelta(days=2),
             related_to=self.person, to_event=_make_event("Altro"))
         self.assertTrue(recente.was_issued_recently())
         self.assertFalse(vecchia.was_issued_recently())
@@ -92,7 +93,7 @@ class OwnershipAuthorizationTests(TestCase):
         )
         cls.event = _make_event("Grest Estate")
         cls.subscription = Subscription.objects.create(
-            date=timezone.now(), price="0", related_to=cls.person, to_event=cls.event,
+            date=timezone.now(), related_to=cls.person, to_event=cls.event,
         )
 
     # Lista anagrafiche
@@ -188,9 +189,9 @@ class PersonDetailActiveSubscriptionsTests(TestCase):
         cls.owner.user_permissions.set(Permission.objects.filter(content_type__app_label="grestmanager"))
         cls.person = Person.objects.create(name="Anna", surname="Neri",
             birth_date=timezone.now(), tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
-        cls.attiva = Subscription.objects.create(date=timezone.now(), price="0",
+        cls.attiva = Subscription.objects.create(date=timezone.now(),
             related_to=cls.person, to_event=_make_event("Attivo", active=True))
-        cls.non_attiva = Subscription.objects.create(date=timezone.now(), price="0",
+        cls.non_attiva = Subscription.objects.create(date=timezone.now(),
             related_to=cls.person, to_event=_make_event("Spento", active=False))
 
     def test_detail_mostra_solo_iscrizioni_attive(self):
@@ -227,7 +228,7 @@ class SubscriptionCreateRulesTests(TestCase):
 
     def test_seconda_iscrizione_rifiutata(self):
         # la persona ha già un'iscrizione
-        Subscription.objects.create(date=timezone.now(), price="0",
+        Subscription.objects.create(date=timezone.now(),
             related_to=self.person, to_event=self.event1)
         self.client.force_login(self.owner)
         r = self.client.post(self._url(), {"to_event": self.event2.id})
@@ -421,7 +422,7 @@ class PresenceBadgeTests(TestCase):
         cls.person = Person.objects.create(name="Anna", surname="Neri", birth_date=timezone.now(),
             tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
         cls.event = _make_event("Grest Estate")
-        cls.subscription = Subscription.objects.create(date=timezone.now(), price="0",
+        cls.subscription = Subscription.objects.create(date=timezone.now(),
             related_to=cls.person, to_event=cls.event)
 
     def _url(self):
@@ -459,3 +460,73 @@ class PresenceBadgeTests(TestCase):
         self.client.force_login(self.owner)
         r = self.client.get(reverse("grestmanager:person_detail", kwargs={"person_id": self.person.id}))
         self.assertContains(r, self._url())
+
+
+# ----------------------------------------------------------------------------
+# Iscrizione: prezzi, conferma, saldo, revisione (fase 1)
+# ----------------------------------------------------------------------------
+class SubscriptionPricingTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_user("staff", password="pw", is_staff=True)
+        cls.owner = User.objects.create_user("owner", password="pw")
+        cls.person = Person.objects.create(name="Anna", surname="Neri", birth_date=timezone.now(),
+            tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
+        cls.event = Event.objects.create(
+            name="Grest", active=True,
+            subscription_opening_date=timezone.now() - datetime.timedelta(days=1),
+            subscription_closing_date=timezone.now() + datetime.timedelta(days=30),
+            price_morning=Decimal("10"), price_lunch=Decimal("5"),
+            price_afternoon=Decimal("8"), price_trip=Decimal("15"),
+        )
+
+    def _sub(self, **flags):
+        return Subscription.objects.create(date=timezone.now(),
+            related_to=self.person, to_event=self.event, **flags)
+
+    def test_calculate_price_somma_fasce_e_gite(self):
+        sub = self._sub(week1_morning=True, week1_afternoon=True,
+                        week2_morning=True, week2_lunch=True, week2_afternoon=True, week2_trip=True)
+        # sett1: 10+8=18 ; sett2: 10+5+8+15=38 ; tot 56
+        self.assertEqual(sub.calculate_price(), Decimal("56"))
+
+    def test_calculate_price_zero_senza_fasce(self):
+        self.assertEqual(self._sub().calculate_price(), Decimal("0"))
+
+    def test_requires_review_pranzo_senza_giornata_intera(self):
+        self.assertTrue(self._sub(week1_morning=True, week1_lunch=True).requires_review())
+        self.assertTrue(self._sub(week1_afternoon=True, week1_lunch=True).requires_review())
+
+    def test_requires_review_false_full_day_o_senza_pranzo(self):
+        self.assertFalse(self._sub(week1_morning=True, week1_lunch=True, week1_afternoon=True).requires_review())
+        self.assertFalse(self._sub(week1_morning=True, week1_afternoon=True).requires_review())
+        self.assertFalse(self._sub().requires_review())
+
+    def test_current_price_dinamico_prima_della_conferma(self):
+        sub = self._sub(week1_morning=True)  # 10
+        self.assertFalse(sub.confirmed)
+        self.assertEqual(sub.current_price(), Decimal("10"))
+        self.assertTrue(sub.is_editable())
+
+    def test_confirm_congela_prezzo_e_registra_chi_quando(self):
+        sub = self._sub(week1_morning=True, week1_lunch=True, week1_afternoon=True)  # 23
+        sub.confirm(self.staff)
+        sub.refresh_from_db()
+        self.assertTrue(sub.confirmed)
+        self.assertEqual(sub.confirmed_by, self.staff)
+        self.assertIsNotNone(sub.confirmed_at)
+        self.assertEqual(sub.confirmed_price, Decimal("23"))
+        self.assertFalse(sub.is_editable())
+        # i prezzi dell'evento cambiano ma il prezzo confermato resta congelato
+        self.event.price_morning = Decimal("100"); self.event.save()
+        sub.refresh_from_db()
+        self.assertEqual(sub.current_price(), Decimal("23"))
+
+    def test_mark_paid_registra_chi_quando(self):
+        sub = self._sub(week1_morning=True)
+        sub.mark_paid(self.staff)
+        sub.refresh_from_db()
+        self.assertTrue(sub.paid)
+        self.assertEqual(sub.paid_by, self.staff)
+        self.assertIsNotNone(sub.paid_at)
