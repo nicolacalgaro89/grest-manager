@@ -530,3 +530,118 @@ class SubscriptionPricingTests(TestCase):
         self.assertTrue(sub.paid)
         self.assertEqual(sub.paid_by, self.staff)
         self.assertIsNotNone(sub.paid_at)
+
+
+# ----------------------------------------------------------------------------
+# Iscrizione: form di partecipazione e azioni staff (fase 2)
+# ----------------------------------------------------------------------------
+class SubscriptionFormActionsTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_user("staff", password="pw", is_staff=True)
+        cls.owner = User.objects.create_user("owner", password="pw")
+        perms = Permission.objects.filter(content_type__app_label="grestmanager")
+        cls.staff.user_permissions.set(perms)
+        cls.owner.user_permissions.set(perms)
+        cls.person = Person.objects.create(name="Anna", surname="Neri", birth_date=timezone.now(),
+            tax_code="NRINNA80A01F205Z", managed_by=cls.owner)
+        cls.event = _make_event("Grest")
+
+    def _detail_url(self, sub):
+        return reverse("grestmanager:subscription_detail",
+                       kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+
+    # --- form di creazione con le fasce -----------------------------------
+    def test_create_salva_le_fasce_scelte(self):
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:subscription_create", kwargs={"person_id": self.person.id})
+        r = self.client.post(url, {"to_event": self.event.id, "week1_morning": "on", "week1_afternoon": "on"})
+        self.assertEqual(r.status_code, 302)
+        sub = self.person.subscriptions.get()
+        self.assertTrue(sub.week1_morning)
+        self.assertTrue(sub.week1_afternoon)
+        self.assertFalse(sub.week1_lunch)
+
+    def test_form_mostra_solo_eventi_attivi(self):
+        _make_event("Spento", active=False)
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:subscription_create", kwargs={"person_id": self.person.id})
+        eventi = list(self.client.get(url).context["form"].fields["to_event"].queryset)
+        self.assertIn(self.event, eventi)
+        self.assertEqual(len(eventi), 1)
+
+    # --- modifica bloccata dopo la conferma -------------------------------
+    def test_update_consentito_prima_della_conferma(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:subscription_update",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        self.assertEqual(self.client.get(url).status_code, 200)
+        r = self.client.post(url, {"to_event": self.event.id, "week2_morning": "on"})
+        self.assertEqual(r.status_code, 302)
+        sub.refresh_from_db()
+        self.assertTrue(sub.week2_morning)
+
+    def test_update_bloccato_dopo_la_conferma(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        sub.confirm(self.staff)
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:subscription_update",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        r = self.client.get(url)
+        self.assertRedirects(r, self._detail_url(sub))  # reindirizzato, non modificabile
+
+    # --- azioni staff: conferma e saldo -----------------------------------
+    def test_staff_conferma_iscrizione(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event,
+                                          week1_morning=True)
+        self.client.force_login(self.staff)
+        url = reverse("grestmanager:subscription_confirm",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        r = self.client.post(url)
+        self.assertEqual(r.status_code, 302)
+        sub.refresh_from_db()
+        self.assertTrue(sub.confirmed)
+        self.assertEqual(sub.confirmed_by, self.staff)
+
+    def test_conferma_richiede_post(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        self.client.force_login(self.staff)
+        url = reverse("grestmanager:subscription_confirm",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        self.assertEqual(self.client.get(url).status_code, 405)  # solo POST
+
+    def test_non_staff_non_puo_confermare(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:subscription_confirm",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        self.assertEqual(self.client.post(url).status_code, 403)
+
+    def test_staff_segna_saldata(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        self.client.force_login(self.staff)
+        url = reverse("grestmanager:subscription_mark_paid",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        self.assertEqual(self.client.post(url).status_code, 302)
+        sub.refresh_from_db()
+        self.assertTrue(sub.paid)
+        self.assertEqual(sub.paid_by, self.staff)
+
+    def test_non_staff_non_puo_saldare(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        self.client.force_login(self.owner)
+        url = reverse("grestmanager:subscription_mark_paid",
+                      kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        self.assertEqual(self.client.post(url).status_code, 403)
+
+    # --- pulsanti staff nel dettaglio -------------------------------------
+    def test_dettaglio_mostra_azioni_staff_solo_allo_staff(self):
+        sub = Subscription.objects.create(date=timezone.now(), related_to=self.person, to_event=self.event)
+        confirm_url = reverse("grestmanager:subscription_confirm",
+                              kwargs={"person_id": self.person.id, "subscription_id": sub.id})
+        self.client.force_login(self.staff)
+        self.assertContains(self.client.get(self._detail_url(sub)), confirm_url)
+        self.client.force_login(self.owner)
+        self.assertNotContains(self.client.get(self._detail_url(sub)), confirm_url)

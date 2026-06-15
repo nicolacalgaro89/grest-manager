@@ -6,7 +6,9 @@ import qrcode
 import qrcode.image.svg
 
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+from django.contrib import messages
 from django.http import HttpResponse
 from django.views import generic
 from django.views.generic import TemplateView
@@ -20,7 +22,7 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse, reverse_lazy   
 from django.utils import timezone
 from .models import Person, Subscription, Event, TimeEntry, EntryType
-from .forms import PersonForm
+from .forms import PersonForm, SubscriptionForm
 from django.contrib.auth.models import Group
 
 logger = logging.getLogger(__name__)
@@ -198,8 +200,8 @@ def subscriptions(request, person_id):
 
 class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
     model = Subscription
-    fields = ['to_event'] # Non mettiamo 'user' qui, lo aggiungiamo noi via codice
-    template_name = "grestmanager/subscription_create.html"
+    form_class = SubscriptionForm
+    template_name = "grestmanager/subscription_form.html"
 
     # Solo il gestore della persona (o lo staff) può iscriverla
     def dispatch(self, request, *args, **kwargs):
@@ -241,7 +243,35 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.CreateView):
     def get_success_url(self):
         # Dopo il salvataggio, torna alla lista delle iscrizioni di quella persona
         return reverse_lazy('grestmanager:subscriptions', kwargs={'person_id': self.kwargs['person_id']})
-    
+
+class SubscriptionUpdateView(LoginRequiredMixin, generic.UpdateView):
+    model = Subscription
+    form_class = SubscriptionForm
+    template_name = "grestmanager/subscription_form.html"
+    pk_url_kwarg = "subscription_id"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+        subscription = self.get_object()
+        if subscription.related_to.managed_by != request.user and not request.user.is_staff:
+            raise PermissionDenied("You do not have permission to edit this subscription.")
+        # Dopo la conferma l'iscrizione non è più modificabile
+        if not subscription.is_editable():
+            messages.warning(request, "L'iscrizione è già stata confermata e non è più modificabile.")
+            return redirect("grestmanager:subscription_detail",
+                            person_id=subscription.related_to.id, subscription_id=subscription.id)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["person"] = self.object.related_to
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy("grestmanager:subscription_detail", kwargs={
+            "person_id": self.object.related_to.id, "subscription_id": self.object.id})
+
 class SubscriptionDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Subscription
     template_name = "grestmanager/subscription_delete.html"
@@ -282,6 +312,30 @@ class SubscriptionDetailView(LoginRequiredMixin, generic.DetailView):
         if subscription.related_to.managed_by != request.user and not request.user.is_staff:
             raise PermissionDenied("You do not have permission to view this subscription.")
         return super().dispatch(request, *args, **kwargs)
+
+@login_required
+@require_POST
+def subscription_confirm(request, person_id, subscription_id):
+    # Solo lo staff può confermare l'iscrizione
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to confirm this subscription.")
+    subscription = get_object_or_404(Subscription, id=subscription_id)
+    if not subscription.confirmed:
+        subscription.confirm(request.user)
+        messages.success(request, "Iscrizione confermata.")
+    return redirect("grestmanager:subscription_detail", person_id=person_id, subscription_id=subscription_id)
+
+@login_required
+@require_POST
+def subscription_mark_paid(request, person_id, subscription_id):
+    # Solo lo staff può segnare l'iscrizione come saldata
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to mark this subscription as paid.")
+    subscription = get_object_or_404(Subscription, id=subscription_id)
+    if not subscription.paid:
+        subscription.mark_paid(request.user)
+        messages.success(request, "Iscrizione segnata come saldata.")
+    return redirect("grestmanager:subscription_detail", person_id=person_id, subscription_id=subscription_id)
 
 @login_required
 def time_entries(request, person_id):

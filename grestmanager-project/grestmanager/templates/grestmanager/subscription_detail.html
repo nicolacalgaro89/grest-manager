@@ -5,18 +5,77 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">Dettagli Iscrizione</h2>
-                    <!--Mostra le informazioni disponibili sull'iscrizione-->
+
                     <p><strong>Persona:</strong> {{ subscription.related_to.name }} {{ subscription.related_to.surname }}</p>
                     <p><strong>Evento:</strong> {{ subscription.to_event.name }}</p>
                     <p><strong>Data emissione:</strong> {{ subscription.date|date:"d/m/Y" }}</p>
-                    <p><strong>Prezzo:</strong> {{ subscription.current_price }}</p>
-                    <p><strong>Attiva:</strong> {{ subscription.is_active|yesno:"Sì,No" }}</p>
-                    <p><strong>Emessa di recente:</strong> {{ subscription.was_issued_recently|yesno:"Sì,No" }}</p>
-                    <div class="d-grid mt-4">
+                    <p>
+                        <strong>Prezzo:</strong> {{ subscription.current_price }} &euro;
+                        {% if subscription.requires_review %}
+                        <span class="badge text-bg-warning ms-2">Da rivedere</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Partecipazione per settimana -->
+                    <h3 class="mt-4 fs-5">Partecipazione</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered text-center align-middle">
+                            <thead>
+                                <tr><th>Settimana</th><th>Mattino</th><th>Pranzo</th><th>Pomeriggio</th><th>Gita</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><th>1</th><td>{{ subscription.week1_morning|yesno:"✓,–" }}</td><td>{{ subscription.week1_lunch|yesno:"✓,–" }}</td><td>{{ subscription.week1_afternoon|yesno:"✓,–" }}</td><td>{{ subscription.week1_trip|yesno:"✓,–" }}</td></tr>
+                                <tr><th>2</th><td>{{ subscription.week2_morning|yesno:"✓,–" }}</td><td>{{ subscription.week2_lunch|yesno:"✓,–" }}</td><td>{{ subscription.week2_afternoon|yesno:"✓,–" }}</td><td>{{ subscription.week2_trip|yesno:"✓,–" }}</td></tr>
+                                <tr><th>3</th><td>{{ subscription.week3_morning|yesno:"✓,–" }}</td><td>{{ subscription.week3_lunch|yesno:"✓,–" }}</td><td>{{ subscription.week3_afternoon|yesno:"✓,–" }}</td><td>{{ subscription.week3_trip|yesno:"✓,–" }}</td></tr>
+                                <tr><th>4</th><td>{{ subscription.week4_morning|yesno:"✓,–" }}</td><td>{{ subscription.week4_lunch|yesno:"✓,–" }}</td><td>{{ subscription.week4_afternoon|yesno:"✓,–" }}</td><td>{{ subscription.week4_trip|yesno:"✓,–" }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Stato -->
+                    <h3 class="mt-4 fs-5">Stato</h3>
+                    <p>
+                        <strong>Confermata:</strong>
+                        {% if subscription.confirmed %}
+                            <span class="badge text-bg-success">Sì</span>
+                            <span class="text-muted small">da {{ subscription.confirmed_by }} il {{ subscription.confirmed_at|date:"d/m/Y H:i" }}</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">No</span>
+                        {% endif %}
+                    </p>
+                    <p>
+                        <strong>Saldata:</strong>
+                        {% if subscription.paid %}
+                            <span class="badge text-bg-success">Sì</span>
+                            <span class="text-muted small">da {{ subscription.paid_by }} il {{ subscription.paid_at|date:"d/m/Y H:i" }}</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">No</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Azioni -->
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        {% if subscription.is_editable %}
+                        <a href="{% url 'grestmanager:subscription_update' person_id=subscription.related_to.id subscription_id=subscription.id %}" class="btn btn-warning">Modifica</a>
+                        {% endif %}
+                        {% if user.is_staff %}
+                            {% if not subscription.confirmed %}
+                            <form method="post" action="{% url 'grestmanager:subscription_confirm' person_id=subscription.related_to.id subscription_id=subscription.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">Conferma</button>
+                            </form>
+                            {% endif %}
+                            {% if not subscription.paid %}
+                            <form method="post" action="{% url 'grestmanager:subscription_mark_paid' person_id=subscription.related_to.id subscription_id=subscription.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">Segna saldata</button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
                         <a href="{% url 'grestmanager:subscriptions' subscription.related_to.id %}" class="btn btn-secondary">Torna alle iscrizioni</a>
                     </div>
                 </div>

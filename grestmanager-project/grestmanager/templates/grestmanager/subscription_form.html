@@ -1,0 +1,65 @@
+{% extends 'grestmanager/base.html' %}
+
+{% block title %}Iscrizione{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">
+                        {% if form.instance.pk %}Modifica iscrizione{% else %}Nuova iscrizione{% endif %}
+                    </h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.to_event.id_for_label }}">Evento</label>
+                            {{ form.to_event }}
+                        </div>
+
+                        <p class="text-muted small mb-2">Seleziona le fasce per ogni settimana (la gita è il venerdì).</p>
+
+                        {% comment %} Le 4 settimane: per ognuna mattino/pranzo/pomeriggio/gita {% endcomment %}
+                        <fieldset class="border rounded p-3 mb-3">
+                            <legend class="fs-6">Settimana 1</legend>
+                            <div class="form-check form-check-inline">{{ form.week1_morning }}<label class="form-check-label" for="{{ form.week1_morning.id_for_label }}">Mattino</label></div>
+                            <div class="form-check form-check-inline">{{ form.week1_lunch }}<label class="form-check-label" for="{{ form.week1_lunch.id_for_label }}">Pranzo</label></div>
+                            <div class="form-check form-check-inline">{{ form.week1_afternoon }}<label class="form-check-label" for="{{ form.week1_afternoon.id_for_label }}">Pomeriggio</label></div>
+                            <div class="form-check form-check-inline">{{ form.week1_trip }}<label class="form-check-label" for="{{ form.week1_trip.id_for_label }}">Gita</label></div>
+                        </fieldset>
+                        <fieldset class="border rounded p-3 mb-3">
+                            <legend class="fs-6">Settimana 2</legend>
+                            <div class="form-check form-check-inline">{{ form.week2_morning }}<label class="form-check-label" for="{{ form.week2_morning.id_for_label }}">Mattino</label></div>
+                            <div class="form-check form-check-inline">{{ form.week2_lunch }}<label class="form-check-label" for="{{ form.week2_lunch.id_for_label }}">Pranzo</label></div>
+                            <div class="form-check form-check-inline">{{ form.week2_afternoon }}<label class="form-check-label" for="{{ form.week2_afternoon.id_for_label }}">Pomeriggio</label></div>
+                            <div class="form-check form-check-inline">{{ form.week2_trip }}<label class="form-check-label" for="{{ form.week2_trip.id_for_label }}">Gita</label></div>
+                        </fieldset>
+                        <fieldset class="border rounded p-3 mb-3">
+                            <legend class="fs-6">Settimana 3</legend>
+                            <div class="form-check form-check-inline">{{ form.week3_morning }}<label class="form-check-label" for="{{ form.week3_morning.id_for_label }}">Mattino</label></div>
+                            <div class="form-check form-check-inline">{{ form.week3_lunch }}<label class="form-check-label" for="{{ form.week3_lunch.id_for_label }}">Pranzo</label></div>
+                            <div class="form-check form-check-inline">{{ form.week3_afternoon }}<label class="form-check-label" for="{{ form.week3_afternoon.id_for_label }}">Pomeriggio</label></div>
+                            <div class="form-check form-check-inline">{{ form.week3_trip }}<label class="form-check-label" for="{{ form.week3_trip.id_for_label }}">Gita</label></div>
+                        </fieldset>
+                        <fieldset class="border rounded p-3 mb-3">
+                            <legend class="fs-6">Settimana 4</legend>
+                            <div class="form-check form-check-inline">{{ form.week4_morning }}<label class="form-check-label" for="{{ form.week4_morning.id_for_label }}">Mattino</label></div>
+                            <div class="form-check form-check-inline">{{ form.week4_lunch }}<label class="form-check-label" for="{{ form.week4_lunch.id_for_label }}">Pranzo</label></div>
+                            <div class="form-check form-check-inline">{{ form.week4_afternoon }}<label class="form-check-label" for="{{ form.week4_afternoon.id_for_label }}">Pomeriggio</label></div>
+                            <div class="form-check form-check-inline">{{ form.week4_trip }}<label class="form-check-label" for="{{ form.week4_trip.id_for_label }}">Gita</label></div>
+                        </fieldset>
+
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary">Salva</button>
+                            <a href="{% url 'grestmanager:subscriptions' person.id %}" class="btn btn-secondary mt-2">Annulla</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
