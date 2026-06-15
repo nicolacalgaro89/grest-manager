@@ -22,11 +22,15 @@ class Event(models.Model):
     active = models.BooleanField(default=True)
     subscription_opening_date = models.DateTimeField("subscription opening date")
     subscription_closing_date = models.DateTimeField("subscription closing date")
-    # Prezzi applicati all'iscrizione: per settimana (mattino/pranzo/pomeriggio) e per gita
+    # Prezzi applicati all'iscrizione: tariffe settimanali (mattino/pranzo/pomeriggio)
     price_morning = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     price_lunch = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     price_afternoon = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-    price_trip = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    # La gita ha un prezzo per ciascuna settimana (gite diverse possono costare diversamente)
+    price_trip_week1 = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    price_trip_week2 = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    price_trip_week3 = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    price_trip_week4 = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     def __str__(self):
         return self.name
     def is_subscription_open(self):
@@ -97,7 +101,7 @@ class Subscription(models.Model):
             if getattr(self, f"week{week}_afternoon"):
                 total += event.price_afternoon
             if getattr(self, f"week{week}_trip"):
-                total += event.price_trip
+                total += getattr(event, f"price_trip_week{week}")
         return total
 
     def current_price(self):

@@ -477,8 +477,9 @@ class SubscriptionPricingTests(TestCase):
             name="Grest", active=True,
             subscription_opening_date=timezone.now() - datetime.timedelta(days=1),
             subscription_closing_date=timezone.now() + datetime.timedelta(days=30),
-            price_morning=Decimal("10"), price_lunch=Decimal("5"),
-            price_afternoon=Decimal("8"), price_trip=Decimal("15"),
+            price_morning=Decimal("10"), price_lunch=Decimal("5"), price_afternoon=Decimal("8"),
+            price_trip_week1=Decimal("15"), price_trip_week2=Decimal("20"),
+            price_trip_week3=Decimal("25"), price_trip_week4=Decimal("30"),
         )
 
     def _sub(self, **flags):
@@ -488,8 +489,12 @@ class SubscriptionPricingTests(TestCase):
     def test_calculate_price_somma_fasce_e_gite(self):
         sub = self._sub(week1_morning=True, week1_afternoon=True,
                         week2_morning=True, week2_lunch=True, week2_afternoon=True, week2_trip=True)
-        # sett1: 10+8=18 ; sett2: 10+5+8+15=38 ; tot 56
-        self.assertEqual(sub.calculate_price(), Decimal("56"))
+        # sett1: 10+8=18 ; sett2: 10+5+8+gita(sett2=20)=43 ; tot 61
+        self.assertEqual(sub.calculate_price(), Decimal("61"))
+
+    def test_gita_prezzo_per_settimana(self):
+        self.assertEqual(self._sub(week3_trip=True).calculate_price(), Decimal("25"))
+        self.assertEqual(self._sub(week4_trip=True).calculate_price(), Decimal("30"))
 
     def test_calculate_price_zero_senza_fasce(self):
         self.assertEqual(self._sub().calculate_price(), Decimal("0"))
